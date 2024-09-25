@@ -11,38 +11,43 @@ class GameBot(commands.Bot) :
         self.guild: discord.Guild = None
         self.admin_role: discord.Role = None
 
-        self.members = {}
-        self.members_filename = "json/members.json"
-
-        self.channels = {}
-        self.channels_filename = "json/channels.json"
-
-        self.roles = {}
-        self.roles_filename = "json/roles.json"
-
-        self.events = {}
-        self.events_filename = "json/events.json"
-
-        self.dict_vars = {
-            "members": [self.members, "json/members.json"],
-            "channels": [self.channels, "json/channels.json"],
-            "roles": [self.roles, "json/roles.json"],
-            "events": [self.events, "json/events.json"],
+        self.vars = {
+            'members': {},
+            'channels': {},
+            'roles': {},
+            'events': {}
         }
 
-        for filename in [self.dict_vars[x][1] for x in self.dict_vars] :
-            if not(os.path.exists(filename)) :
-                with open(filename, 'x') as f :
-                    pass # on crée juste le fichier
+        self.files = {x: f"json/{x}.json" for x in self.vars}
 
-        for var_name in self.dict_vars :
-            self.write_json(var_name)
+        for var_name in self.vars :
+            if not(os.path.exists(self.files[var_name])) :
+                self.write_json(var_name)
 
+    def admin_command(self, function: function) :
+        async def wrapper(ctx: commands.Context, *args, **kwargs) :
+            author = self.guild.get_member(ctx.author.id)
+            if author.get_role(self.admin_role.id) != None :
+                await function(ctx, *args, **kwargs)
+        return wrapper
+
+    def dm_command(self, function: function) :
+        async def wrapper(ctx: commands.Context, *args, **kwargs):
+            author = self.guild.get_member(ctx.author.id)
+            dm_channel = author.dm_channel if author.dm_channel is not None else await author.create_dm()
+            if ctx.channel == dm_channel :
+                await function(ctx, *args, **kwargs)
+            else :
+                message = await ctx.channel.fetch_message(ctx.message.id)
+                await ctx.channel.delete_messages([message])
+                await dm_channel.send("Pour éviter de polluer les salons du serveur, je ne réponds qu'aux commandes envoyées par message privé")
+        return wrapper
 
     def write_json(self, var_name: str) :
-        json_object = json.dumps(self.dict_vars[var_name][0], indent=2)
-        with open(self.dict_vars[var_name][1], "wt") as f:
+        json_object = json.dumps(self.vars[var_name], indent=2)
+        with open(self.files[var_name], "wt") as f:
             f.write(json_object)
 
+    
 
     
