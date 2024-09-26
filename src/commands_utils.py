@@ -15,3 +15,10 @@ async def logs_gamebot(ctx: commands.Context, nb_lines: int = 10, *args, **kwarg
             await bot.send(author.dm_channel, txt, wrappers=('```', '```'))
     except Exception as e :
         bot.log(f"An exception occured while reading logs: {e}", 'error')
+
+@bot.command(name="kill")
+@bot.admin_command
+@bot.dm_command
+async def kill_gamebot(ctx: commands.Context) :
+    bot.log("Bot killed by the !kill command", 'warning')
+    sys.exit(0)
