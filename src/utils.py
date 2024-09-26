@@ -1,13 +1,14 @@
 from variables import *
 
-def _default_config(variable, default) :
+# set default config for not DB-friendly JSON variables (default is the default for the whole variable)
+def default_config(variable, default) :
     if isinstance(default, dict) :
         if isinstance(variable, dict) :
             for key in default:
                 if not(key in variable) :
                     variable[key] = default[key]
                 else :
-                    variable[key] = _default_config(variable[key], default[key])
+                    variable[key] = default_config(variable[key], default[key])
         else :
             variable = default
     else :
@@ -16,10 +17,8 @@ def _default_config(variable, default) :
                 variable = default
     return variable
 
-
-
-
-def set_default_config(variable: dict[any], default: dict[any]) :
+# set default config for DB-friendly JSON variables (default is the default format for an instance)
+def db_default_config(variable: dict[any], default: dict[any]) :
     for key in variable :
-        variable[key] = _default_config(variable[key], default)
+        variable[key] = default_config(variable[key], default)
     return variable

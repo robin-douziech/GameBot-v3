@@ -1,5 +1,6 @@
 import discord, json, os
 from discord.ext import commands, tasks
+import datetime as dt
 
 from utils import *
 
@@ -10,10 +11,11 @@ class GameBot(commands.Bot) :
 
         self.guild: discord.Guild = None
         self.admin_role: discord.Role = None
+        self.channels: dict[int: discord.abc.GuildChannel] = None
+        self.config = {}
 
         self.vars = {
             'members': {},
-            'channels': {},
             'roles': {},
             'events': {}
         }
