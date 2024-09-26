@@ -33,6 +33,16 @@ async def on_ready():
 
     clock.start()
 
+@bot.event
+async def on_message(message: discord.Message) :
+	author = bot.guild.get_member(message.author.id)
+	if not(author.bot) and message.channel == author.dm_channel :
+		bot.log(f"DM message from {author.name}#{author.discriminator} : {message.content}")
+	if message.content.startswith(bot.command_prefix) :
+		await bot.process_commands(message)
+	else :
+		await bot.process_msg(message)
+
 @tasks.loop(seconds=60)
 async def clock() :
 

@@ -97,6 +97,9 @@ class GameBot(commands.Bot) :
             case _ :
                 raise Exception("Unknown logging level")
             
+    async def process_msg(self, message: discord.Message) :
+        pass
+            
     async def send(self, channel: discord.TextChannel, message: str, wrappers: tuple[str] = ('', '')) :
         messages = self.divide_message(message, wrappers=wrappers)
         for msg in messages :
