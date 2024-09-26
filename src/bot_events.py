@@ -16,8 +16,11 @@ async def on_ready():
     # load config and set default
     with open("json/config.json", "rt") as fread :
         config = json.load(fread)
-        print(f"current config: {bot.config}\ndefault config: {bot.defaults['config']}\n")
         bot.config = default_config(config, bot.defaults["config"])
-        print(f"new config: {bot.config}")
         with open("json/config.json", "wt") as fwrite :
             fwrite.write(json.dumps(bot.config, indent=2))
+
+@tasks.loop(seconds=60)
+async def clock() :
+    now = dt.datetime.now().strftime('%d/%m/%y %H:%M')
+    (date, time) = now.split()
