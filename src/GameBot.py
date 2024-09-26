@@ -1,7 +1,7 @@
 import discord, json, os
 from discord.ext import commands, tasks
 
-from variables import *
+from utils import *
 
 class GameBot(commands.Bot) :
 
@@ -18,20 +18,22 @@ class GameBot(commands.Bot) :
             'events': {}
         }
 
+        self.defaults = BOT_VARS_DEFAULTS
+
         self.files = {x: f"json/{x}.json" for x in self.vars}
 
         for var_name in self.vars :
             if not(os.path.exists(self.files[var_name])) :
                 self.write_json(var_name)
 
-    def admin_command(self, function: function) :
+    def admin_command(self, function: callable) :
         async def wrapper(ctx: commands.Context, *args, **kwargs) :
             author = self.guild.get_member(ctx.author.id)
             if author.get_role(self.admin_role.id) != None :
                 await function(ctx, *args, **kwargs)
-        return wrapper
+        return wrapper        
 
-    def dm_command(self, function: function) :
+    def dm_command(self, function: callable) :
         async def wrapper(ctx: commands.Context, *args, **kwargs):
             author = self.guild.get_member(ctx.author.id)
             dm_channel = author.dm_channel if author.dm_channel is not None else await author.create_dm()
