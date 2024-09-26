@@ -20,7 +20,32 @@ async def on_ready():
         with open("json/config.json", "wt") as fwrite :
             fwrite.write(json.dumps(bot.config, indent=2))
 
+    # setting logs file
+    (day, month, year) = bot.get_current_datetime()[:3]
+    if not(os.path.exists(f"logs/20{year}/{month}/")) :
+        os.makedirs(f"logs/20{year}/{month}")
+    formatter = logging.Formatter('[%(asctime)s] %(levelname)s - %(message)s')
+    handler = logging.FileHandler(f"logs/20{year}/{month}/{day}.log")
+    handler.setFormatter(formatter)
+    logging.getLogger().handlers = [handler]
+
+    bot.log(f"{bot.user.display_name} est prêt.", 'info')    
+
+    clock.start()
+
 @tasks.loop(seconds=60)
 async def clock() :
-    now = dt.datetime.now().strftime('%d/%m/%y %H:%M')
-    (date, time) = now.split()
+
+    (day, month, year, hours, minutes) = bot.get_current_datetime()
+
+    # setting logs file (new day)
+    if f"{hours}:{minutes}" == "00:00" :
+        if int(day) == 1 :
+            if int(month) == 1 :
+                os.makedirs(f"logs/20{year}", exist_ok=True)
+            os.makedirs(f"logs/20{year}/{month}", exist_ok=True)
+        formatter = logging.Formatter('[%(asctime)s] %(levelname)s - %(message)s')
+        handler = logging.FileHandler(f"logs/20{year}/{month}/{day}.log")
+        handler.setFormatter(formatter)
+        logging.getLogger().handlers = [handler]
+            

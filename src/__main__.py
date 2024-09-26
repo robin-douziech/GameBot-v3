@@ -1,4 +1,4 @@
-from bot_commands import *
+from commands_utils import *
 from dotenv import load_dotenv
 import os
 
