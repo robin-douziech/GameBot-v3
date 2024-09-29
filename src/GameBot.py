@@ -1,4 +1,4 @@
-import json, os, calendar, logging, sys, re, shutil
+import json, calendar, logging, sys, re, shutil
 from dateutil.relativedelta import relativedelta
 from discord.ext import commands, tasks
 import datetime as dt
