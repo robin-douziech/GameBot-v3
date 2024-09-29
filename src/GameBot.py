@@ -22,6 +22,8 @@ class GameBot(commands.Bot) :
         self.channels: dict[str, discord.TextChannel] = {}
 
         self.messages: dict[str, discord.Message] = {}
+        
+        self.config_filename = "json/config.json"
         self.config = {}
 
         self.vars = {
@@ -42,8 +44,10 @@ class GameBot(commands.Bot) :
                 with open(f"json/{string}.json", "x") as f :
                     f.write("{}")
 
-    def add_members(self, pseudos: list[str]) :
+    async def add_members(self, pseudos: list[str]) :
         for pseudo in pseudos :
+            discord_member = self.get_discord_member(pseudo)
+            await discord_member.add_roles(self.roles["base"])
             self.vars["members"][pseudo] = BOT_VARS_DEFAULTS["members"]
             self.write_json("members")
 
@@ -242,9 +246,12 @@ class GameBot(commands.Bot) :
 
     def write_json(self, var_name: str) :
         """ This function saves the content of a bot.vars variable in the corresponding json file """
-        json_object = json.dumps(self.vars[var_name], indent=2)
         with open(self.files[var_name], "wt") as f:
-            f.write(json_object)
+            f.write(json.dumps(self.vars[var_name], indent=2))
+
+    def write_config(self) :
+        with open(self.config_filename, "wt") as f :
+            f.write(json.dumps(self.config, indent=2))
 
     
 

@@ -13,8 +13,6 @@ async def birthday_gamebot(ctx: commands.Context, *args, **kwargs) :
     else:
         await bot.send(author.dm_channel, "Tu as déjà une autre commande en cours")
 
-
-
 @bot.command(name="kill")
 @bot.admin_command
 @bot.dm_command
@@ -37,3 +35,27 @@ async def logs_gamebot(ctx: commands.Context, nb_lines: int = 10, *args, **kwarg
             await bot.send(author.dm_channel, txt, wrappers=('```', '```'))
     except Exception as e :
         bot.log(f"An exception occured while reading logs: {e}", 'error')
+
+@bot.command(name="maintenance")
+@bot.admin_command
+@bot.dm_command
+async def maintenance_gamebot(ctx: commands.Context, *args, **kwargs) :
+    if len(args) > 0 :
+        if args[0] == "up" and bot.config["maintenance"] == "down" :
+            for member in [m for m in bot.guild.members if not(m.bot)] :
+                await member.add_roles(bot.roles["maintenance"])
+                await member.remove_roles(bot.roles["7tadellien(ne)"])
+                await member.remove_roles(bot.roles["base"])
+            bot.config["maintenance"] = "up"
+            bot.write_config()
+        elif args[0] == "down" and bot.config["maintenance"] == "up" :
+            for member in [m for m in bot.guild.members if not(m.bot)] :
+                await member.remove_roles(bot.roles["maintenance"])
+                await member.add_roles(bot.roles["base"])
+            message: discord.Message = (await bot.get_messages_by_ids_in_channel(bot.messages["rules"][-1:], bot.channels["rules"]))[0]
+            reaction: discord.Reaction = [r for r in message.reactions if r.emoji == chr(0x1F4DD)][0]
+            async for member in reaction.users() :
+                await member.add_roles(bot.roles["7tadellien(ne)"])
+            bot.config["maintenance"] = "down"
+            bot.write_config()
+

@@ -25,7 +25,8 @@ BOT_VARS_DEFAULTS = {
     "events": {},
     "config": {
         "hours_offset": 0,
-        "logs_retention_period": "1 month"
+        "logs_retention_period": "1 month",
+        "maintenance": "down"
     }
 }
 
@@ -44,8 +45,7 @@ Voici une présentation des différentes catégories du serveur :
 - Si tu acceptes une invitation, tu auras accès à un salon dans la catégorie #soirées
 """,
     "rules": """Ici c'est les règles, t'as intérêt à les respecter""",
-    "maintenance": """https://tenor.com/view/discord-gif-27684109
-Le serveur est temporairement indisponible pour cause de maintenance. Je ne sais pas exactement ce que fait {owner_mention}, il ajoute peut-être des salon ou me met à jour, qui sait ?\
+    "maintenance": """Le serveur est temporairement indisponible pour cause de maintenance. Je ne sais pas exactement ce que fait {owner_mention}, il ajoute peut-être des salon ou me met à jour, qui sait ?\
 J'espère que cela ne durera pas trop longtemps, veuillez nous excuser pour la gêne occasionnée.""",
     "anniversaires": """C'est l'anniversaire de {member_mention} aujourd'hui ! {age}"""
 }

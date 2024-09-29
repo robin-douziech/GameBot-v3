@@ -16,10 +16,8 @@ async def on_ready():
     
     # load config and set default
     with open("json/config.json", "rt") as fread :
-        config = json.load(fread)
-        bot.config = default_config(config, bot.defaults["config"])
-        with open("json/config.json", "wt") as fwrite :
-            fwrite.write(json.dumps(bot.config, indent=2))
+        bot.config = default_config(json.load(fread), bot.defaults["config"])
+        bot.write_config()
 
     # load bot messages
     with open("json/messages.json", "rt") as f :
@@ -48,10 +46,12 @@ async def on_ready():
     for member in bot.vars["members"] :
          if member not in guild_members :
             members_to_remove.append(member)
-    bot.add_members(members_to_add)
+    await bot.add_members(members_to_add)
     bot.remove_members(members_to_remove)
 
     # who accepted the rules ?
+    for member in [m for m in bot.guild.members if not(m.bot) and m.get_role(ROLES_IDS["base"]) is None] :
+        await member.add_roles(bot.roles["base"])
     message: discord.Message = (await bot.get_messages_by_ids_in_channel(bot.messages["rules"][-1:], bot.channels["rules"]))[0]
     reaction: discord.Reaction = [r for r in message.reactions if r.emoji == chr(0x1F4DD)][0]
     members_having_reacted = [user async for user in reaction.users()]
@@ -71,6 +71,12 @@ async def on_ready():
         await bot.channels["rules"].purge()
         messages = await bot.send(bot.channels["rules"], MESSAGES["rules"], emojis=[chr(0x1F4DD)])
         bot.save_message("rules", [message.id for message in messages])
+
+    if (not("maintenance" in bot.messages) or await bot.get_messages_by_ids_in_channel(bot.messages["maintenance"], "maintenance") == None) :
+        await bot.channels["maintenance"].purge()
+        await bot.send(bot.channels["maintenance"], 'https://tenor.com/view/discord-gif-27684109')
+        messages = await bot.send(bot.channels["maintenance"], MESSAGES["maintenance"].format(owner_mention=bot.owner.mention))
+        bot.save_message("maintenance", [message.id for message in messages])
 
     bot.log(f"{bot.user.display_name} est prêt.", 'info')    
 
@@ -93,7 +99,7 @@ async def on_message(message: discord.Message) :
 async def on_member_join(member: discord.Member) :
     pseudo = f"{member.name}#{member.discriminator}"
     if member in bot.guild.members and not(pseudo in bot.vars["members"]) :
-        bot.add_members([member])
+        await bot.add_members([member])
 
 @bot.event
 async def on_member_remove(member: discord.Member) :

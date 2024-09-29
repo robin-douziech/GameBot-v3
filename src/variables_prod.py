@@ -12,6 +12,7 @@ CHANNEL_IDS = {
 
 ROLES_IDS = {
     "admin": 0,
+    "base": 0,
     "7tadellien(ne)": 0,
     "maintenance": 0
 }
