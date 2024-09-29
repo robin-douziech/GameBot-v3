@@ -1,6 +1,7 @@
 from GameBot import *
 
 bot = GameBot()
+bot.remove_command("help")
 
 def get_time_ago(delta: str) :
     (day, month, year) = bot.get_current_datetime()[:3]
