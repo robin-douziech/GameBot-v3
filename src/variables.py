@@ -1,21 +1,32 @@
 BOT_GUILD_ID = 1282342173022621726
-ADMIN_ROLE_ID = 1288199614306189383
+BOT_OWNER_ID = 394185214479302656
 DISCORD_MAX_MESSAGE_LENGTH = 2000
 
 CHANNEL_IDS = {
+    "bienvenue": 1282342173022621729,
     "informations" : 1289260988830580868,
     "règles": 1288199250764763250,
-    "annonces": 1282367924291502161
+    "annonces": 1282367924291502161,
+    "anniversaires": 1289951637854486601,
+    "maintenance": 0
+}
+
+ROLES_IDS = {
+    "admin": 1288199614306189383,
+    "7tadellien(ne)": 0,
+    "maintenance": 0
 }
 
 BOT_VARS_DEFAULTS = {
     "members": {
         'id': 0,
+        'questionned': '',
         'questions': [],
         'object_being_created': {
             'type': '',
             'id': 0
-        }
+        },
+        'birthday': "0"
     },
     "roles": {},
     "events": {},
@@ -39,7 +50,28 @@ Voici une présentation des différentes catégories du serveur :
 - Quand quelqu'un t'invite à une soirée, tu vera apparaître un salon dans la catégorie #invitations avec un message auquel tu pourras réagir pour accepter l'invitation ou non
 - Si tu acceptes une invitation, tu auras accès à un salon dans la catégorie #soirées
 """,
-    "rules": """
+    "rules": """Ici c'est les règles, t'as intérêt à les respecter""",
+    "maintenance": """https://tenor.com/view/discord-gif-27684109
+Le serveur est temporairement indisponible pour cause de maintenance. Je ne sais pas exactement ce que fait {owner_mention}, il ajoute peut-être des salon ou me met à jour, qui sait ?\
+J'espère que cela ne durera pas trop longtemps, veuillez nous excuser pour la gêne occasionnée.""",
+    "anniversaires": """C'est l'anniversaire de {member_mention} aujourd'hui ! {age}"""
+}
 
-"""
+# date: JJ/MM
+# year: /AAAA
+# time: ( hours:minutes)
+# hours: ([0-1][0-9]|2[0-3])
+# minutes: [0-5][0-9]
+birthday_date_regexp = r"^(((?P<date>((0[1-9]|[1-2][0-9]|3[0-1])/(01|03|05|07|08|10|12))|((0[1-9]|[1-2][0-9]|30)/(04|06|09|11))|((0[1-9]|[1-2][0-9])/02))(?P<year>/\d{4}){0,1}(?P<time> (?P<hours>[0-1][0-9]|2[0-3]):(?P<minutes>[0-5][0-9])){0,1})|0)$"
+
+CREATION_QUESTIONS = {
+    "birthday": {
+        "date": {
+            "text": """Si tu veux que je te souhaite ton anniversaire dans le salon #anniversaires, envoie-moi la date de celui-ci au format JJ/MM[/AAAA] [HH:MM].\
+Si tu précises ton année de naissance, je donnerai ton âge dans le message. Si tu précise l'heure de ta naissance, j'enverrai le message à cette heure là.
+Si tu ne veux pas que j'annonce ton anniversaire, envoie-moi 0.
+""",
+            "valid": birthday_date_regexp
+        }
+    }
 }

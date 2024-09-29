@@ -17,6 +17,7 @@ class GameBot(commands.Bot) :
         super().__init__(command_prefix = '!', intents = discord.Intents.all())
 
         self.guild: discord.Guild = None
+        self.owner: discord.Member = None
         self.admin_role: discord.Role = None
         self.channels: dict[int, discord.TextChannel] = {}
         self.config = {}
@@ -40,6 +41,11 @@ class GameBot(commands.Bot) :
                 with open(f"json/{string}.json", "x") as f :
                     f.write("{}")
 
+    def add_members(self, pseudos: list[str]) :
+        for pseudo in pseudos :
+            self.vars["members"][pseudo] = BOT_VARS_DEFAULTS["members"]
+            self.write_json("members")
+
     def admin_command(self, function: callable) :
         """ Decorator to apply to a command so that only members with admin role can use it """
         async def wrapper(ctx: commands.Context, *args, **kwargs) :
@@ -47,6 +53,11 @@ class GameBot(commands.Bot) :
             if author.get_role(self.admin_role.id) != None :
                 await function(ctx, *args, **kwargs)
         return wrapper
+    
+    def answer_is_valid(self, author: discord.Member, answer: str) :
+        question = self.vars["members"][f"{author.name}#{author.discriminator}"]["questions"][0]
+        valid = CREATION_QUESTIONS[self.vars["members"][f"{author.name}#{author.discriminator}"]["questionned"]][question]["valid"]
+        return re.match(valid, answer)
     
     def divide_message(self, message_content: str, wrappers: tuple[str] = ('', '')) :
         """ This function split a message content so that its length doesn't exceed DISCORD_MAX_MESSAGE_LENGTH """
@@ -85,6 +96,12 @@ class GameBot(commands.Bot) :
             counter += 100
             messages = [message async for message in channel.history(limit=counter)]
         return messages
+    
+    def get_discord_member(self, pseudo: str) :
+        for member in self.guild.members :
+            if pseudo == f"{member.name}#{member.discriminator}" :
+                return member
+        return None
     
     async def get_messages_by_ids_in_channel(self, message_ids: list[int], channel: discord.TextChannel|str) :
         """ This function returns a list of discord.Message found in the given channel.
@@ -144,7 +161,57 @@ class GameBot(commands.Bot) :
                 raise Exception("Unknown logging level")
             
     async def process_msg(self, message: discord.Message) :
-        pass
+        author = self.guild.get_member(message.author.id)
+
+        if not(author.bot) :
+
+            if self.vars["members"][f"{author.name}#{author.discriminator}"]["questionned"] :
+
+                match (self.vars["members"][f"{author.name}#{author.discriminator}"]["questionned"]) :
+                    case "birthday" :
+                        if self.answer_is_valid(author, message.content) :
+
+                            birthday = ""
+                            m = re.match(CREATION_QUESTIONS["birthday"]["date"]["valid"], message.content)
+                            if message.content == "0" :
+                                birthday = message.content
+                                response = "Très bien, je n'annoncerai pas ton anniversaire dans le salon #anniversaires"
+                            elif m.group('year') is None and m.group('time') is None :
+                                birthday = f"{message.content} 00:00"
+                                response = f"J'annoncerai ton anniversaire dans le salon #anniversaires le {m.group('date')} à minuit"
+                            elif m.group('year') is None :
+                                birthday = message.content
+                                response = f"J'annoncerai ton anniversaire dans le salon #anniversaires le {m.group('date')} à{m.group('time')}"
+                            elif m.group('time') is None :
+                                birthday = f"{message.content} 00:00"
+                                response = f"J'annoncerai ton anniversaire dans le salon #anniversaires le {m.group('date')} à minuit en précisant ton âge"
+                            else :
+                                birthday = message.content
+                                response = f"J'annoncerai ton anniversaire dans le salon #anniversaires le {m.group('date')} à{m.group('time')} en précisant ton âge"
+                            self.vars["members"][f"{author.name}#{author.discriminator}"]["birthday"] = birthday
+                            self.write_json("members")
+
+                            await self.send(author.dm_channel, response)
+                            await self.send_next_question(author)
+
+                            if len(self.vars["members"][f"{author.name}#{author.discriminator}"]["questions"]) == 0 :
+                                self.vars["members"][f"{author.name}#{author.discriminator}"]["questionned"] = ""
+                                self.write_json("members")
+
+                        else :
+                            await self.send(author.dm_channel, "Ta réponse ne respecte pas le format attendu")
+
+                    case _ :
+                        pass
+
+
+    def remove_members(self, pseudos: list[str]) :
+        try :
+            for pseudo in pseudos :
+                self.vars["members"].pop(pseudo)
+                self.write_json("members")
+        except Exception as e :
+            self.log(f"{e} (while trying to delete a member)", "error")
 
     def save_message(self, title: str, ids: list[int]) :
         """ This function saves an official bot message into json/messages.json (so that we can retreive this message) """
@@ -159,6 +226,16 @@ class GameBot(commands.Bot) :
         for msg in message_contents :
             messages.append(await channel.send(msg))
         return messages
+    
+    async def send_next_question(self, author: discord.Member) :
+        if len(self.vars["members"][f"{author.name}#{author.discriminator}"]["questions"]) > 0 :
+            self.vars["members"][f"{author.name}#{author.discriminator}"]["questions"].pop(0)
+            if len(self.vars["members"][f"{author.name}#{author.discriminator}"]["questions"]) > 0 :
+                question_type = self.vars["members"][f"{author.name}#{author.discriminator}"]["questionned"]
+                question = self.vars["members"][f"{author.name}#{author.discriminator}"]["questions"][0]
+                await self.send(author.dm_channel, CREATION_QUESTIONS[question_type][question]["text"])
+        self.write_json("members")
+
 
     def write_json(self, var_name: str) :
         """ This function saves the content of a bot.vars variable in the corresponding json file """

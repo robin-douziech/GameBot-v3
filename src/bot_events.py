@@ -4,8 +4,9 @@ from bot_instanciation import *
 async def on_ready():
 
     bot.guild = bot.get_guild(BOT_GUILD_ID)
-    bot.admin_role = bot.guild.get_role(ADMIN_ROLE_ID)
+    bot.admin_role = bot.guild.get_role(ROLES_IDS["admin"])
     bot.channels = {x: bot.guild.get_channel(x) for x in CHANNEL_IDS.values()}
+    bot.owner = bot.guild.get_member(BOT_OWNER_ID)
 
     # load variables and set defaults
     for var_name in bot.vars :
@@ -33,6 +34,23 @@ async def on_ready():
     handler.setFormatter(formatter)
     logging.getLogger().handlers = [handler]
 
+    # guild members
+    guild_members: list[str] = []
+    members_to_add: list[str] = []
+    members_to_remove: list[str] = []
+    for member in [m for m in bot.guild.members if not(m.bot)] :
+        guild_members.append(f"{member.name}#{member.discriminator}")
+        if member.dm_channel is None :
+            await member.create_dm()
+    for member in guild_members :
+        if member not in bot.vars["members"] :
+            members_to_add.append(member)
+    for member in bot.vars["members"] :
+         if member not in guild_members :
+            members_to_remove.append(member)
+    bot.add_members(members_to_add)
+    bot.remove_members(members_to_remove)            
+
     if (not("informations" in bot.messages) or await bot.get_messages_by_ids_in_channel(bot.messages["informations"], "informations") == None) :
         await bot.channels[CHANNEL_IDS["informations"]].purge()
         messages = await bot.send(bot.channels[CHANNEL_IDS["informations"]], MESSAGES["informations"])
@@ -44,18 +62,30 @@ async def on_ready():
 
 @bot.event
 async def on_message(message: discord.Message) :
-	author = bot.guild.get_member(message.author.id)
-	if not(author.bot) and message.channel == author.dm_channel :
-		bot.log(f"DM message from {author.name}#{author.discriminator} : {message.content}")
-	if message.content.startswith(bot.command_prefix) :
-		await bot.process_commands(message)
-	else :
-		await bot.process_msg(message)
+    author = bot.guild.get_member(message.author.id)
+    if not(author.bot) and message.channel == author.dm_channel :
+        bot.log(f"DM message from {author.name}#{author.discriminator} : {message.content}")
+    if message.content.startswith(bot.command_prefix) :
+        if message.content[1:].split(' ')[0] in [c.name for c in bot.commands] :
+            await bot.process_commands(message)
+        else :
+            await bot.send(author.dm_channel, "Je ne connais pas cette commande")
+    else :
+        await bot.process_msg(message)
 
 @tasks.loop(seconds=60)
 async def clock() :
 
     (day, month, year, hours, minutes) = bot.get_current_datetime()
+
+    # anniversaires
+    for member in bot.vars["members"] :
+        discord_member = bot.get_discord_member(member)
+        m = re.match(CREATION_QUESTIONS["birthday"]["date"]["valid"], bot.vars["members"][member]["birthday"])
+
+        age = f"Cette personne agée a {int(f'20{year}') - int(m.group('year')[1:])} ans" if m.group('year') is not None else ""
+        if f"{day}/{month} {hours}:{minutes}" == f"{m.group('date')}{m.group('time')}" :
+            await bot.send(bot.channels[CHANNEL_IDS["anniversaires"]], MESSAGES["anniversaires"].format(member_mention=discord_member.mention, age=age))
 
     if f"{hours}:{minutes}" == "00:00" :
 
