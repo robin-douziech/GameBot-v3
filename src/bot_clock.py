@@ -12,7 +12,7 @@ async def clock() :
 
         age = f"Cette personne agée a {int(f'20{year}') - int(m.group('year')[1:])} ans" if m.group('year') is not None else ""
         if f"{day}/{month} {hours}:{minutes}" == f"{m.group('date')}{m.group('time')}" :
-            await bot.send(bot.channels[CHANNEL_IDS["anniversaires"]], MESSAGES["anniversaires"].format(member_mention=discord_member.mention, age=age))
+            await bot.send(bot.channels["anniversaires"], MESSAGES["anniversaires"].format(member_mention=discord_member.mention, age=age))
 
     if f"{hours}:{minutes}" == "00:00" :
 

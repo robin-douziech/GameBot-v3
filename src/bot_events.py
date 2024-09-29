@@ -4,9 +4,9 @@ from bot_clock import *
 async def on_ready():
 
     bot.guild = bot.get_guild(BOT_GUILD_ID)
-    bot.admin_role = bot.guild.get_role(ROLES_IDS["admin"])
-    bot.channels = {x: bot.guild.get_channel(x) for x in CHANNEL_IDS.values()}
     bot.owner = bot.guild.get_member(BOT_OWNER_ID)
+    bot.channels = {channel: bot.guild.get_channel(CHANNEL_IDS[channel]) for channel in CHANNEL_IDS}
+    bot.roles = {role: bot.guild.get_role(ROLES_IDS[role]) for role in ROLES_IDS}
 
     # load variables and set defaults
     for var_name in bot.vars :
@@ -49,16 +49,27 @@ async def on_ready():
          if member not in guild_members :
             members_to_remove.append(member)
     bot.add_members(members_to_add)
-    bot.remove_members(members_to_remove)            
+    bot.remove_members(members_to_remove)
+
+    # who accepted the rules ?
+    message: discord.Message = (await bot.get_messages_by_ids_in_channel(bot.messages["rules"][-1:], bot.channels["rules"]))[0]
+    reaction: discord.Reaction = [r for r in message.reactions if r.emoji == chr(0x1F4DD)][0]
+    members_having_reacted = [user async for user in reaction.users()]
+    for member in [m for m in bot.guild.members if m.get_role(ROLES_IDS["7tadellien(ne)"]) is not None] :
+        if not(member in members_having_reacted) :
+            await member.remove_roles(bot.roles["7tadellien(ne)"])
+    for member in [m for m in bot.guild.members if m.get_role(ROLES_IDS["7tadellien(ne)"]) is None] :
+        if member in members_having_reacted :
+            await member.add_roles(bot.roles["7tadellien(ne)"])
 
     if (not("informations" in bot.messages) or await bot.get_messages_by_ids_in_channel(bot.messages["informations"], "informations") == None) :
-        await bot.channels[CHANNEL_IDS["informations"]].purge()
-        messages = await bot.send(bot.channels[CHANNEL_IDS["informations"]], MESSAGES["informations"])
+        await bot.channels["informations"].purge()
+        messages = await bot.send(bot.channels["informations"], MESSAGES["informations"])
         bot.save_message("informations", [message.id for message in messages])
 
     if (not("rules" in bot.messages) or await bot.get_messages_by_ids_in_channel(bot.messages["rules"], "rules") == None) :
-        await bot.channels[CHANNEL_IDS["rules"]].purge()
-        messages = await bot.send(bot.channels[CHANNEL_IDS["rules"]], MESSAGES["rules"], emojis=[chr(0x1F4DD)])
+        await bot.channels["rules"].purge()
+        messages = await bot.send(bot.channels["rules"], MESSAGES["rules"], emojis=[chr(0x1F4DD)])
         bot.save_message("rules", [message.id for message in messages])
 
     bot.log(f"{bot.user.display_name} est prêt.", 'info')    
@@ -79,13 +90,43 @@ async def on_message(message: discord.Message) :
         await bot.process_msg(message)
 
 @bot.event
-async def on_member_join(member) :
+async def on_member_join(member: discord.Member) :
     pseudo = f"{member.name}#{member.discriminator}"
     if member in bot.guild.members and not(pseudo in bot.vars["members"]) :
         bot.add_members([member])
 
 @bot.event
-async def on_member_remove(member) :
+async def on_member_remove(member: discord.Member) :
     pseudo = f"{member.name}#{member.discriminator}"
     if pseudo in bot.vars["members"] and not(member in bot.guild.members) :
         bot.remove_members([member])
+
+@bot.event
+async def on_raw_reaction_add(payload: discord.RawReactionActionEvent) :
+    channel = bot.get_channel(payload.channel_id)
+    message = await channel.fetch_message(payload.message_id)
+    author = bot.guild.get_member(payload.user_id)
+
+    if author is not None and not(author.bot) :
+
+        # réaction au message des règles du serveur
+        if "rules" in bot.messages and len(bot.messages["rules"]) > 0 and message.id == bot.messages["rules"][-1] :
+            if payload.emoji.name == chr(0x1F4DD) :
+                await author.add_roles(bot.roles["7tadellien(ne)"])
+            else :
+                await message.remove_reaction(payload.emoji, author)
+
+@bot.event
+async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent) :
+    channel = bot.get_channel(payload.channel_id)
+    message = await channel.fetch_message(payload.message_id)
+    try :
+        author = bot.guild.get_member(payload.user_id)
+    except :
+        return
+    
+    if author is not None and not(author.bot) :
+
+        # réaction au message des règles du serveur
+        if "rules" in bot.messages and len(bot.messages["rules"]) > 0 and message.id == bot.messages["rules"][-1] and payload.emoji.name == chr(0x1F4DD) :
+            await author.remove_roles(bot.roles["7tadellien(ne)"])

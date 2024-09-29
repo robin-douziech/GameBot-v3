@@ -18,10 +18,11 @@ class GameBot(commands.Bot) :
 
         self.guild: discord.Guild = None
         self.owner: discord.Member = None
-        self.admin_role: discord.Role = None
-        self.channels: dict[int, discord.TextChannel] = {}
-        self.config = {}
+        self.roles: dict[str, discord.Role] = {}
+        self.channels: dict[str, discord.TextChannel] = {}
+
         self.messages: dict[str, discord.Message] = {}
+        self.config = {}
 
         self.vars = {
             'members': {},
@@ -50,7 +51,7 @@ class GameBot(commands.Bot) :
         """ Decorator to apply to a command so that only members with admin role can use it """
         async def wrapper(ctx: commands.Context, *args, **kwargs) :
             author = self.guild.get_member(ctx.author.id)
-            if author.get_role(self.admin_role.id) != None :
+            if author.get_role(self.roles["admin"].id) != None :
                 await function(ctx, *args, **kwargs)
         return wrapper
     
@@ -89,7 +90,7 @@ class GameBot(commands.Bot) :
     async def get_all_messages_in_channel(self, channel: discord.TextChannel|str):
         """ This function returns a list containing all the messages of a channel """
         if isinstance(channel, str) :
-            channel = self.channels[CHANNEL_IDS[channel]]
+            channel = self.channels[channel]
         messages: list[discord.Message] = []
         counter = 0
         while counter == len(messages) :
@@ -117,14 +118,14 @@ class GameBot(commands.Bot) :
 
         """
         channel_messages = await self.get_all_messages_in_channel(channel)
-        messages: list[discord.Message|None] = []
+        messages: list[discord.Message] = []
         for id in message_ids :
             message = get_message_by_id(channel_messages, id)
             if message is not None :
                 messages.append(message)
             else :
                 return None
-        return message
+        return messages
     
     def get_current_datetime(self) :
         """ This function returns the current datetime (taking into account the hour_offset
