@@ -72,3 +72,15 @@ async def on_message(message: discord.Message) :
             await bot.send(author.dm_channel, "Je ne connais pas cette commande")
     else :
         await bot.process_msg(message)
+
+@bot.event
+async def on_member_join(member) :
+    pseudo = f"{member.name}#{member.discriminator}"
+    if member in bot.guild.members and not(pseudo in bot.vars["members"]) :
+        bot.add_members([member])
+
+@bot.event
+async def on_member_remove(member) :
+    pseudo = f"{member.name}#{member.discriminator}"
+    if pseudo in bot.vars["members"] and not(member in bot.guild.members) :
+        bot.remove_members([member])
