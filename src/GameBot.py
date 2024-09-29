@@ -1,4 +1,4 @@
-import discord, json, os, calendar, logging, sys, re, shutil
+import json, os, calendar, logging, sys, re, shutil
 from dateutil.relativedelta import relativedelta
 from discord.ext import commands, tasks
 import datetime as dt
@@ -18,8 +18,9 @@ class GameBot(commands.Bot) :
 
         self.guild: discord.Guild = None
         self.admin_role: discord.Role = None
-        self.channels: dict[int: discord.abc.GuildChannel] = None
+        self.channels: dict[int, discord.TextChannel] = {}
         self.config = {}
+        self.messages: dict[str, discord.Message] = {}
 
         self.vars = {
             'members': {},
@@ -34,16 +35,22 @@ class GameBot(commands.Bot) :
         for var_name in self.vars :
             if not(os.path.exists(self.files[var_name])) :
                 self.write_json(var_name)
+        for string in ["config", "messages"] :
+            if not(os.path.exists(f"json/{string}.json")) :
+                with open(f"json/{string}.json", "x") as f :
+                    f.write("{}")
 
     def admin_command(self, function: callable) :
+        """ Decorator to apply to a command so that only members with admin role can use it """
         async def wrapper(ctx: commands.Context, *args, **kwargs) :
             author = self.guild.get_member(ctx.author.id)
             if author.get_role(self.admin_role.id) != None :
                 await function(ctx, *args, **kwargs)
         return wrapper
     
-    def divide_message(self, message: str, wrappers: tuple[str] = ('', '')) :
-        lines = message.split("\n")
+    def divide_message(self, message_content: str, wrappers: tuple[str] = ('', '')) :
+        """ This function split a message content so that its length doesn't exceed DISCORD_MAX_MESSAGE_LENGTH """
+        lines = message_content.split("\n")
         for i in range(len(lines)-2) :
             if lines[i] == "" :
                 lines[i] = "\u200B"
@@ -56,6 +63,7 @@ class GameBot(commands.Bot) :
         return msg_list
 
     def dm_command(self, function: callable) :
+        """ Decorator to apply to a command so it can only be sent by direct message """
         async def wrapper(ctx: commands.Context, *args, **kwargs):
             author = self.guild.get_member(ctx.author.id)
             dm_channel = author.dm_channel if author.dm_channel is not None else await author.create_dm()
@@ -67,7 +75,43 @@ class GameBot(commands.Bot) :
                 await dm_channel.send("Pour éviter de polluer les salons du serveur, je ne réponds qu'aux commandes envoyées par message privé")
         return wrapper
     
+    async def get_all_messages_in_channel(self, channel: discord.TextChannel|str):
+        """ This function returns a list containing all the messages of a channel """
+        if isinstance(channel, str) :
+            channel = self.channels[CHANNEL_IDS[channel]]
+        messages: list[discord.Message] = []
+        counter = 0
+        while counter == len(messages) :
+            counter += 100
+            messages = [message async for message in channel.history(limit=counter)]
+        return messages
+    
+    async def get_messages_by_ids_in_channel(self, message_ids: list[int], channel: discord.TextChannel|str) :
+        """ This function returns a list of discord.Message found in the given channel.
+        The message it looks for are the ones having the given ids (present in message_ids).
+        If at least one message is not found, the function return None.
+
+        Args:
+            message_ids (list[int]): Ids of the messages we are looking for
+            channel (discord.TextChannel|str): The channel where to look for messages
+
+        Returns:
+            list[discord.Message]|None: The messages found
+
+        """
+        channel_messages = await self.get_all_messages_in_channel(channel)
+        messages: list[discord.Message|None] = []
+        for id in message_ids :
+            message = get_message_by_id(channel_messages, id)
+            if message is not None :
+                messages.append(message)
+            else :
+                return None
+        return message
+    
     def get_current_datetime(self) :
+        """ This function returns the current datetime (taking into account the hour_offset
+        between Europe/Paris and the datetime of the server where the bot is executed) """
         now = dt.datetime.now().strftime('%d/%m/%y %H:%M')
         (date, time) = now.split()
         (day, month, year) = date.split('/')
@@ -84,6 +128,7 @@ class GameBot(commands.Bot) :
         return (day, month, year, hours, minutes)
     
     def log(self, message: str, level: str = "info") :
+        """ This function logs message into the bot logs file """
         match level :
             case "debug" :
                 logging.debug(message)
@@ -100,13 +145,23 @@ class GameBot(commands.Bot) :
             
     async def process_msg(self, message: discord.Message) :
         pass
+
+    def save_message(self, title: str, ids: list[int]) :
+        """ This function saves an official bot message into json/messages.json (so that we can retreive this message) """
+        self.messages[title] = ids
+        with open("json/messages.json", "wt") as f :
+            f.write(json.dumps(self.messages, indent=2))
             
-    async def send(self, channel: discord.TextChannel, message: str, wrappers: tuple[str] = ('', '')) :
-        messages = self.divide_message(message, wrappers=wrappers)
-        for msg in messages :
-            await channel.send(msg)
+    async def send(self, channel: discord.TextChannel, message_content: str, wrappers: tuple[str] = ('', '')) :
+        """ This function send a message into a channel """
+        message_contents = self.divide_message(message_content, wrappers=wrappers)
+        messages: list[discord.Message] = []
+        for msg in message_contents :
+            messages.append(await channel.send(msg))
+        return messages
 
     def write_json(self, var_name: str) :
+        """ This function saves the content of a bot.vars variable in the corresponding json file """
         json_object = json.dumps(self.vars[var_name], indent=2)
         with open(self.files[var_name], "wt") as f:
             f.write(json_object)

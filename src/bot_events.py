@@ -20,6 +20,10 @@ async def on_ready():
         with open("json/config.json", "wt") as fwrite :
             fwrite.write(json.dumps(bot.config, indent=2))
 
+    # load bot messages
+    with open("json/messages.json", "rt") as f :
+         bot.messages = json.load(f)    
+
     # setting logs file
     (day, month, year) = bot.get_current_datetime()[:3]
     if not(os.path.exists(f"logs/20{year}/{month}/")) :
@@ -28,6 +32,11 @@ async def on_ready():
     handler = logging.FileHandler(f"logs/20{year}/{month}/{day}.log")
     handler.setFormatter(formatter)
     logging.getLogger().handlers = [handler]
+
+    if (not("informations" in bot.messages) or await bot.get_messages_by_ids_in_channel(bot.messages["informations"], "informations") == None) :
+        await bot.channels[CHANNEL_IDS["informations"]].purge()
+        messages = await bot.send(bot.channels[CHANNEL_IDS["informations"]], MESSAGES["informations"])
+        bot.save_message("informations", [message.id for message in messages])
 
     bot.log(f"{bot.user.display_name} est prêt.", 'info')    
 
