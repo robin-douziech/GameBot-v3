@@ -56,6 +56,11 @@ async def on_ready():
         messages = await bot.send(bot.channels[CHANNEL_IDS["informations"]], MESSAGES["informations"])
         bot.save_message("informations", [message.id for message in messages])
 
+    if (not("rules" in bot.messages) or await bot.get_messages_by_ids_in_channel(bot.messages["rules"], "rules") == None) :
+        await bot.channels[CHANNEL_IDS["rules"]].purge()
+        messages = await bot.send(bot.channels[CHANNEL_IDS["rules"]], MESSAGES["rules"], emojis=[chr(0x1F4DD)])
+        bot.save_message("rules", [message.id for message in messages])
+
     bot.log(f"{bot.user.display_name} est prêt.", 'info')    
 
     clock.start()

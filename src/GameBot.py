@@ -219,12 +219,14 @@ class GameBot(commands.Bot) :
         with open("json/messages.json", "wt") as f :
             f.write(json.dumps(self.messages, indent=2))
             
-    async def send(self, channel: discord.TextChannel, message_content: str, wrappers: tuple[str] = ('', '')) :
+    async def send(self, channel: discord.TextChannel, message_content: str, wrappers: tuple[str] = ('', ''), emojis: list[discord.Reaction] = []) :
         """ This function send a message into a channel """
         message_contents = self.divide_message(message_content, wrappers=wrappers)
         messages: list[discord.Message] = []
         for msg in message_contents :
             messages.append(await channel.send(msg))
+        for emoji in emojis :
+            await messages[-1].add_reaction(emoji)
         return messages
     
     async def send_next_question(self, author: discord.Member) :
