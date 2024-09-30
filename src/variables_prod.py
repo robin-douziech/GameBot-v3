@@ -11,6 +11,7 @@ CHANNEL_IDS = {
 }
 
 ROLES_IDS = {
+    "@everyone": 0,
     "admin": 0,
     "base": 0,
     "7tadellien(ne)": 0,

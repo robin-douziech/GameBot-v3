@@ -46,10 +46,14 @@ async def maintenance_gamebot(ctx: commands.Context, *args, **kwargs) :
                 await member.add_roles(bot.roles["maintenance"])
                 await member.remove_roles(bot.roles["7tadellien(ne)"])
                 await member.remove_roles(bot.roles["base"])
+                for role_id in bot.vars["members"][f"{member.name}#{member.discriminator}"]["roles"] :
+                    await member.remove_roles(bot.guild.get_role(role_id))
             bot.config["maintenance"] = "up"
             bot.write_config()
         elif args[0] == "down" and bot.config["maintenance"] == "up" :
             for member in [m for m in bot.guild.members if not(m.bot)] :
+                for role_id in bot.vars["members"][f"{member.name}#{member.discriminator}"]["roles"] :
+                    await member.add_roles(bot.guild.get_role(role_id))
                 await member.remove_roles(bot.roles["maintenance"])
                 await member.add_roles(bot.roles["base"])
             message: discord.Message = (await bot.get_messages_by_ids_in_channel(bot.messages["rules"][-1:], bot.channels["rules"]))[0]

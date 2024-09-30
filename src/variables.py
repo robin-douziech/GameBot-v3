@@ -10,6 +10,8 @@ else :
 
 DISCORD_MAX_MESSAGE_LENGTH = 2000
 
+ROLES_TO_IGNORE = ["base", "7tadellien(ne)", "maintenance", "@everyone", "admin"]
+
 BOT_VARS_DEFAULTS = {
     "members": {
         'id': 0,
@@ -19,7 +21,8 @@ BOT_VARS_DEFAULTS = {
             'type': '',
             'id': 0
         },
-        'birthday': "0"
+        'birthday': "0",
+        'roles': []
     },
     "roles": {},
     "events": {},

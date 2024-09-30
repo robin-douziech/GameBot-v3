@@ -41,13 +41,18 @@ async def on_ready():
         if member.dm_channel is None :
             await member.create_dm()
     for member in guild_members :
-        if member not in bot.vars["members"] :
+        if not(member in bot.vars["members"]) :
             members_to_add.append(member)
     for member in bot.vars["members"] :
-         if member not in guild_members :
+         if not(member in guild_members) :
             members_to_remove.append(member)
     await bot.add_members(members_to_add)
     bot.remove_members(members_to_remove)
+
+    roles_to_ignore = [bot.roles[role] for role in ROLES_TO_IGNORE]
+    for member in bot.vars["members"] :
+        bot.vars["members"][member]["roles"] = [role.id for role in bot.get_discord_member(member).roles if not(role in roles_to_ignore)]
+    bot.write_json("members")
 
     # who accepted the rules ?
     for member in [m for m in bot.guild.members if not(m.bot) and m.get_role(ROLES_IDS["base"]) is None] :
@@ -136,3 +141,14 @@ async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent) :
         # réaction au message des règles du serveur
         if "rules" in bot.messages and len(bot.messages["rules"]) > 0 and message.id == bot.messages["rules"][-1] and payload.emoji.name == chr(0x1F4DD) :
             await author.remove_roles(bot.roles["7tadellien(ne)"])
+
+@bot.event
+async def on_member_update(before: discord.Member, after: discord.Member) :
+    roles_to_ignore = [bot.roles[role] for role in ROLES_TO_IGNORE]
+    if after.roles != before.roles and any([role not in roles_to_ignore for role in set(after.roles).symmetric_difference(set(before.roles))]) and not(bot.roles["maintenance"] in after.roles) :
+        for role in [r for r in before.roles if not(r in after.roles) and not(r in roles_to_ignore)] :
+            bot.vars["members"][f"{after.name}#{after.discriminator}"]["roles"].remove(role.id)
+        for role in [r for r in after.roles if not(r in before.roles) and not(r in roles_to_ignore)] :
+            bot.vars["members"][f"{after.name}#{after.discriminator}"]["roles"].append(role.id)
+        bot.write_json("members")
+
