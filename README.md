@@ -16,6 +16,7 @@ GameBot a été développé pour être résistant aux crashs (c'est-à-dire qu'i
 
 ### Les fichiers du bot
 
+```
 json/                (non suivi)
   channels.json
   config.json
@@ -38,6 +39,7 @@ src/
   commands_event.py
   commands_utils.py
   \_\_main\_\_.py
+```
 
 
 
