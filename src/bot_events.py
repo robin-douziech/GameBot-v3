@@ -57,14 +57,18 @@ async def on_ready():
     # who accepted the rules ?
     for member in [m for m in bot.guild.members if not(m.bot) and m.get_role(ROLES_IDS["base"]) is None] :
         await member.add_roles(bot.roles["base"])
-    message: discord.Message = (await bot.get_messages_by_ids_in_channel(bot.messages["rules"][-1:], bot.channels["rules"]))[0]
-    reaction: discord.Reaction = [r for r in message.reactions if r.emoji == chr(0x1F4DD)][0]
-    members_having_reacted = [user async for user in reaction.users()]
-    for member in [m for m in bot.guild.members if m.get_role(ROLES_IDS["7tadellien(ne)"]) is not None] :
-        if not(member in members_having_reacted) :
-            await member.remove_roles(bot.roles["7tadellien(ne)"])
-    for member in [m for m in bot.guild.members if m.get_role(ROLES_IDS["7tadellien(ne)"]) is None] :
-        if member in members_having_reacted :
+    if bot.channels["rules"] is not None :
+        message: discord.Message = (await bot.get_messages_by_ids_in_channel(bot.messages["rules"][-1:], bot.channels["rules"]))[0]
+        reaction: discord.Reaction = [r for r in message.reactions if r.emoji == chr(0x1F4DD)][0]
+        members_having_reacted = [user async for user in reaction.users()]
+        for member in [m for m in bot.guild.members if m.get_role(ROLES_IDS["7tadellien(ne)"]) is not None] :
+            if not(member in members_having_reacted) :
+                await member.remove_roles(bot.roles["7tadellien(ne)"])
+        for member in [m for m in bot.guild.members if m.get_role(ROLES_IDS["7tadellien(ne)"]) is None] :
+            if member in members_having_reacted :
+                await member.add_roles(bot.roles["7tadellien(ne)"])
+    else :
+        for member in [m for m in bot.guild.members if not(m.bot) and m.get_role(ROLES_IDS["7tadellien(ne)"]) is None] :
             await member.add_roles(bot.roles["7tadellien(ne)"])
 
     if (not("informations" in bot.messages) or await bot.get_messages_by_ids_in_channel(bot.messages["informations"], "informations") == None) :
@@ -72,7 +76,7 @@ async def on_ready():
         messages = await bot.send(bot.channels["informations"], MESSAGES["informations"])
         bot.save_message("informations", [message.id for message in messages])
 
-    if (not("rules" in bot.messages) or await bot.get_messages_by_ids_in_channel(bot.messages["rules"], "rules") == None) :
+    if bot.channels["rules"] is not None and (not("rules" in bot.messages) or await bot.get_messages_by_ids_in_channel(bot.messages["rules"], "rules") == None) :
         await bot.channels["rules"].purge()
         messages = await bot.send(bot.channels["rules"], MESSAGES["rules"], emojis=[chr(0x1F4DD)])
         bot.save_message("rules", [message.id for message in messages])

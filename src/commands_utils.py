@@ -56,10 +56,14 @@ async def maintenance_gamebot(ctx: commands.Context, *args, **kwargs) :
                     await member.add_roles(bot.guild.get_role(role_id))
                 await member.remove_roles(bot.roles["maintenance"])
                 await member.add_roles(bot.roles["base"])
-            message: discord.Message = (await bot.get_messages_by_ids_in_channel(bot.messages["rules"][-1:], bot.channels["rules"]))[0]
-            reaction: discord.Reaction = [r for r in message.reactions if r.emoji == chr(0x1F4DD)][0]
-            async for member in reaction.users() :
-                await member.add_roles(bot.roles["7tadellien(ne)"])
+            if bot.channels["rules"] is not None :
+                message: discord.Message = (await bot.get_messages_by_ids_in_channel(bot.messages["rules"][-1:], bot.channels["rules"]))[0]
+                reaction: discord.Reaction = [r for r in message.reactions if r.emoji == chr(0x1F4DD)][0]
+                async for member in reaction.users() :
+                    await member.add_roles(bot.roles["7tadellien(ne)"])
+            else :
+                for member in [m for m in bot.guild.members if not(m.bot) and m.get_role(ROLES_IDS["7tadellien(ne)"]) is None] :
+                    await member.add_roles(bot.roles["7tadellien(ne)"])
             bot.config["maintenance"] = "down"
             bot.write_config()
 

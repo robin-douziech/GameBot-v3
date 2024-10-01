@@ -48,6 +48,8 @@ class GameBot(commands.Bot) :
         for pseudo in pseudos :
             discord_member = self.get_discord_member(pseudo)
             await discord_member.add_roles(self.roles["base"])
+            if self.channels["rules"] is None :
+                await discord_member.add_roles(self.roles["7tadellien(ne)"])
             self.vars["members"][pseudo] = BOT_VARS_DEFAULTS["members"]
             self.write_json("members")
 
