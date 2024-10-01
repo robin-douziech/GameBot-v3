@@ -10,9 +10,9 @@ def get_time_ago(delta: str) :
     date: dt.datetime = None
     match m.group(2) :
         case 'day' :
-            date = current_date + relativedelta(days=-int(m.group(1)))
+            date = current_date + dt.timedelta(days=-int(m.group(1)))
         case 'month' :
-            date = current_date + relativedelta(months=-int(m.group(1)))
+            date = current_date + dt.timedelta(days=-30*int(m.group(1)))
         case 'year' :
-            date = current_date + relativedelta(years=-int(m.group(1)))
+            date = current_date + dt.timedelta(days=-365*int(m.group(1)))
     return date
