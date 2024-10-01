@@ -14,6 +14,33 @@ Mes amis et moi apprécions les jeux de société, c'est pourquoi les fonctionna
 
 GameBot a été développé pour être résistant aux crashs (c'est-à-dire qu'il est capable de récupérer au redémarrage un état identique à l'état qu'il avait lorsqu'il s'est arrêté). Il prend aussi en compte les réactions ajoutées aux messages importants lorsqu'il était éteint (par exemple: le message des règles auxquel il faut réagir pour avoir accès aux salons du serveur, ou un message d'invitation à une soirée auquel il faut réagir pour accepter l'invitation).
 
+### Les fichiers du bot
+
+json/                (non suivi)
+  channels.json
+  config.json
+  events.json
+  members.json
+  messages.json
+  roles.json
+logs/                (non suivi)
+  ...
+src/
+  .env               (non suivi)
+  variables_test.py
+  variables_prod.py
+  variables.py
+  utils.py
+  GameBot.py
+  bot_instanciation.py
+  bot_clock.py
+  bot_events.py
+  commands_event.py
+  commands_utils.py
+  \_\_main\_\_.py
+
+
+
 ### Les logs
 
 Afin de savoir ce qu'il s'est passé en cas de pépin avec le bot, je lui ai ajouté des logs (la bibliothèque interne logging de python s'en occupe très bien). Pour ne pas avoir un immense fichier de logs, je fais un fichier de logs par jour (le chemin du fichier est logs/AAAA/MM/JJ.log). Pour ne pas faire exploser la mémoir de mon serveur, je supprime les fichiers de logs trop vieux (il y a un paramètre dans json/config.json pour définir combien de temps les logs sont conservés, je ferai sûrement une commande pour modifier cette valeur sans devoir aller sur le serveur).
