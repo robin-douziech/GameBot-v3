@@ -19,6 +19,10 @@ async def on_ready():
         bot.config = default_config(json.load(fread), bot.defaults["config"])
         bot.write_config()
 
+    bot.config["maintenance_roles_backup"] = {x: bot.config["maintenance_roles_backup"][x] if x in bot.config["maintenance_roles_backup"] else [] for x in bot.vars["members"]}
+    bot.config["rules_roles_backup"] = {x: bot.config["rules_roles_backup"][x] if x in bot.config["rules_roles_backup"] else [] for x in bot.vars["members"]}
+    bot.write_config()
+
     # load bot messages
     with open("json/messages.json", "rt") as f :
          bot.messages = json.load(f)    
@@ -54,29 +58,54 @@ async def on_ready():
         bot.vars["members"][member]["roles"] = [role.id for role in bot.get_discord_member(member).roles if not(role in roles_to_ignore)]
     bot.write_json("members")
 
-    # who accepted the rules ?
-    for member in [m for m in bot.guild.members if not(m.bot) and m.get_role(ROLES_IDS["base"]) is None] :
-        await member.add_roles(bot.roles["base"])
-    if bot.channels["rules"] is not None :
-        message: discord.Message = (await bot.get_messages_by_ids_in_channel(bot.messages["rules"][-1:], bot.channels["rules"]))[0]
-        reaction: discord.Reaction = [r for r in message.reactions if r.emoji == chr(0x1F4DD)][0]
-        members_having_reacted = [user async for user in reaction.users()]
-        for member in [m for m in bot.guild.members if m.get_role(ROLES_IDS["7tadellien(ne)"]) is not None] :
-            if not(member in members_having_reacted) :
-                await member.remove_roles(bot.roles["7tadellien(ne)"])
-        for member in [m for m in bot.guild.members if m.get_role(ROLES_IDS["7tadellien(ne)"]) is None] :
-            if member in members_having_reacted :
+    # Gestion des rôles
+    if bot.config["maintenance"] == "down" :
+
+        # On actualise les membres du rôle "7tadellien(ne)" en fonction de qui a accepté les règles
+        #
+        # on donne le rôle "base" à tous ceux qui ne l'ont pas
+        for member in [m for m in bot.guild.members if not(m.bot) and m.get_role(ROLES_IDS["base"]) is None] :
+            await member.add_roles(bot.roles["base"])
+        #
+        # si la fonctionnalité "règles" est utilisée, on ajoute le rôle "7tadellien(ne)" uniquement aux membres ayant accepté les règles
+        if bot.channels["rules"] is not None :
+            message = (await bot.get_messages_by_ids_in_channel(bot.messages["rules"][-1:], bot.channels["rules"]))[-1]
+            reaction = [r for r in message.reactions if r.emoji == chr(0x1F4DD)][0]
+            members_having_reacted = [user async for user in reaction.users()]
+            for member in [m for m in bot.guild.members if m.get_role(ROLES_IDS["7tadellien(ne)"]) is not None and not(m.bot)] :
+                if not(member in members_having_reacted) :
+                    bot.config["rules_roles_backup"][f"{member.name}#{member.discriminator}"] = await backup_roles(member, remove=True)
+                    bot.write_config()
+                    await member.remove_roles(bot.roles["7tadellien(ne)"])
+            for member in [m for m in bot.guild.members if m.get_role(ROLES_IDS["7tadellien(ne)"]) is None and not(m.bot)] :
+                if member in members_having_reacted :
+                    for role_id in bot.config["rules_roles_backup"][f"{member.name}#{member.discriminator}"] :
+                        await member.add_roles(bot.guild.get_role(role_id))
+                    bot.config["rules_roles_backup"][f"{member.name}#{member.discriminator}"] = []
+                    bot.write_config()
+                    await member.add_roles(bot.roles["7tadellien(ne)"])
+        # sinon on ajoute le rôle à tout le monde
+        else :
+            for member in [m for m in bot.guild.members if m.get_role(ROLES_IDS["7tadellien(ne)"]) is None and not(m.bot)] :
                 await member.add_roles(bot.roles["7tadellien(ne)"])
+
     else :
-        for member in [m for m in bot.guild.members if not(m.bot) and m.get_role(ROLES_IDS["7tadellien(ne)"]) is None] :
-            await member.add_roles(bot.roles["7tadellien(ne)"])
+
+        for member in [m for m in bot.guild.members if not(m.bot)] :
+            bot.config["maintenance_roles_backup"][f"{member.name}#{member.discriminator}"].extend(await backup_roles(member, remove=True))
+            bot.write_config()
+            if member.get_role(bot.roles["7tadellien(ne)"]) is not None :
+                await member.remove_roles("7tadellien(ne)")
+            if member.get_role(bot.roles["base"]) is not None :
+                await member.remove_roles("base")
+            if member.get_role(bot.roles["maintenance"]) is None :
+                await member.add_roles(bot.roles["maintenance"])
 
     # liste de toutes les dates d'anniversaire des membres du serveur (pour petite optimisation dans clock())
-    bot.vars["birthday_datetimes"] = []
     for member in bot.vars["members"] :
         m = re.match(CREATION_QUESTIONS["birthday"]["date"]["valid"], bot.vars["members"][member]["birthday"])
-        if bot.vars["members"][member]["birthday"] != "0" and not(bot.vars["members"][member]["birthday"] in bot.vars["birthday_datetimes"]) :
-            bot.vars["birthday_datetimes"].append(f"{m.group('date')}{m.group('time')}")
+        if bot.vars["members"][member]["birthday"] != "0" and not(bot.vars["members"][member]["birthday"] in bot.birthday_datetimes) :
+            bot.birthday_datetimes.append(f"{m.group('date')}{m.group('time')}")
 
     if (not("informations" in bot.messages) or await bot.get_messages_by_ids_in_channel(bot.messages["informations"], "informations") == None) :
         await bot.channels["informations"].purge()
@@ -135,6 +164,10 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent) :
         if "rules" in bot.messages and len(bot.messages["rules"]) > 0 and message.id == bot.messages["rules"][-1] :
             if payload.emoji.name == chr(0x1F4DD) :
                 await author.add_roles(bot.roles["7tadellien(ne)"])
+                for role_id in bot.config["rules_roles_backup"][f"{author.name}#{author.discriminator}"] :
+                    await author.remove_roles(bot.guild.get_role(role_id))
+                bot.config["rules_roles_backup"][f"{author.name}#{author.discriminator}"] = []
+                bot.write_config()
             else :
                 await message.remove_reaction(payload.emoji, author)
 
@@ -152,14 +185,29 @@ async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent) :
         # réaction au message des règles du serveur
         if "rules" in bot.messages and len(bot.messages["rules"]) > 0 and message.id == bot.messages["rules"][-1] and payload.emoji.name == chr(0x1F4DD) :
             await author.remove_roles(bot.roles["7tadellien(ne)"])
-
+            bot.config["rules_roles_backup"][f"{author.name}#{author.discriminator}"] = await backup_roles(author, remove=True)
+            bot.write_config()
+            
 @bot.event
 async def on_member_update(before: discord.Member, after: discord.Member) :
+
     roles_to_ignore = [bot.roles[role] for role in ROLES_TO_IGNORE]
+
     if after.roles != before.roles and any([role not in roles_to_ignore for role in set(after.roles).symmetric_difference(set(before.roles))]) and not(bot.roles["maintenance"] in after.roles) :
+        
+        # suppression de rôle
         for role in [r for r in before.roles if not(r in after.roles) and not(r in roles_to_ignore)] :
             bot.vars["members"][f"{after.name}#{after.discriminator}"]["roles"].remove(role.id)
+
+        # ajout de rôle
         for role in [r for r in after.roles if not(r in before.roles) and not(r in roles_to_ignore)] :
             bot.vars["members"][f"{after.name}#{after.discriminator}"]["roles"].append(role.id)
+
+            # si le serveur est en maintenance, on ajoute l'id du rôle à la backup et on supprime le rôle
+            if bot.config["maintenance"] == "up" :
+                bot.config["maintenance_roles_backup"][f"{after.name}#{after.discriminator}"].append(role.id)
+                await after.remove_roles(role)
+                bot.write_config()
+
         bot.write_json("members")
 

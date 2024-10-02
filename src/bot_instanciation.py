@@ -3,6 +3,14 @@ from GameBot import *
 bot = GameBot()
 bot.remove_command("help")
 
+async def backup_roles(member: discord.Member, remove: bool = False) :
+    backup_roles = []
+    for role in [r for r in member.roles if not(r in [bot.roles[role_str] for role_str in ROLES_TO_IGNORE])] :
+        backup_roles.append(role.id)
+        if remove :
+            await member.remove_roles(role)
+    return backup_roles
+
 def get_time_ago(delta: str) :
     (day, month, year) = bot.get_current_datetime()[:3]
     current_date = dt.datetime(year, month, day)

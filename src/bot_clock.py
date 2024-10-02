@@ -6,7 +6,7 @@ async def clock() :
     (day, month, year, hours, minutes) = bot.get_current_datetime()
 
     # Souhaiter les anniversaires
-    if f"{day}/{month} {hours}:{minutes}" in bot.vars["birthday_datetimes"] :
+    if f"{day}/{month} {hours}:{minutes}" in bot.birthday_datetimes :
         for member in bot.vars["members"] :
             discord_member = bot.get_discord_member(member)
             m = re.match(CREATION_QUESTIONS["birthday"]["date"]["valid"], bot.vars["members"][member]["birthday"])

@@ -21,6 +21,8 @@ class GameBot(commands.Bot) :
         self.channels: dict[str, discord.TextChannel] = {}
 
         self.messages: dict[str, discord.Message] = {}
+
+        self.birthday_datetimes = []
         
         self.config_filename = "json/config.json"
         self.config = {}
@@ -177,9 +179,9 @@ class GameBot(commands.Bot) :
                     case "birthday" :
                         if self.answer_is_valid(author, message.content) :
 
-                            # Si c'était le seul à avoir cette date d'anniversaire, on la retire de self.vars["birthday_datetimes"]
+                            # Si c'était le seul à avoir cette date d'anniversaire, on la retire de self.birthday_datetimes
                             if not(self.vars["members"][f"{author.name}#{author.discriminator}"]["birthday"] in [self.vars["members"][member]["birthday"] for member in self.vars["members"] if member != f"{author.name}#{author.discriminator}"]) :
-                                self.vars["birthday_datetimes"].remove(self.vars["members"][f"{author.name}#{author.discriminator}"]["birthday"])
+                                self.birthday_datetimes.remove(self.vars["members"][f"{author.name}#{author.discriminator}"]["birthday"])
 
                             # Selon le format du message reçu, on adapte la valeur stockée (on ajoute 00:00 si l'heure n'est pas précisée) et le message de confirmation
                             birthday = ""
@@ -200,8 +202,8 @@ class GameBot(commands.Bot) :
                                 birthday = message.content
                                 response = f"J'annoncerai ton anniversaire dans le salon #anniversaires le {m.group('date')} à{m.group('time')} en précisant ton âge"
                             self.vars["members"][f"{author.name}#{author.discriminator}"]["birthday"] = birthday
-                            if birthday != "0" and not(birthday in self.vars["birthday_datetimes"]):
-                                self.vars["birthday_datetimes"].append(birthday)
+                            if birthday != "0" and not(birthday in self.birthday_datetimes):
+                                self.birthday_datetimes.append(birthday)
                             self.write_json("members")
 
                             await self.send(author.dm_channel, response)

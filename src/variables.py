@@ -29,7 +29,9 @@ BOT_VARS_DEFAULTS = {
     "config": {
         "hours_offset": 0,
         "logs_retention_period": "1 month",
-        "maintenance": "down"
+        "maintenance": "down",
+        "maintenance_roles_backup": {},
+        "rules_roles_backup": {}
     }
 }
 
