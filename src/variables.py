@@ -64,7 +64,7 @@ CREATION_QUESTIONS = {
     "birthday": {
         "date": {
             "text": """Si tu veux que je te souhaite ton anniversaire dans le salon #anniversaires, envoie-moi la date de celui-ci au format JJ/MM[/AAAA] [HH:MM].\
-Si tu précises ton année de naissance, je donnerai ton âge dans le message. Si tu précise l'heure de ta naissance, j'enverrai le message à cette heure là.
+Si tu précises ton année de naissance, je donnerai ton âge dans le message. Si tu précise l'heure de ta naissance, j'enverrai le message à cette heure là (sinon je le ferai à minuit).
 Si tu ne veux pas que j'annonce ton anniversaire, envoie-moi 0.
 """,
             "valid": birthday_date_regexp
