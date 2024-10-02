@@ -5,18 +5,18 @@ async def clock() :
 
     (day, month, year, hours, minutes) = bot.get_current_datetime()
 
-    # anniversaires
-    for member in bot.vars["members"] :
-        discord_member = bot.get_discord_member(member)
-        m = re.match(CREATION_QUESTIONS["birthday"]["date"]["valid"], bot.vars["members"][member]["birthday"])
-
-        age = f"Cette personne agée a {int(f'20{year}') - int(m.group('year')[1:])} ans" if m.group('year') is not None else ""
-        if f"{day}/{month} {hours}:{minutes}" == f"{m.group('date')}{m.group('time')}" :
-            await bot.send(bot.channels["anniversaires"], MESSAGES["anniversaires"].format(member_mention=discord_member.mention, age=age))
+    # Souhaiter les anniversaires
+    if f"{day}/{month} {hours}:{minutes}" in bot.vars["birthday_datetimes"] :
+        for member in bot.vars["members"] :
+            discord_member = bot.get_discord_member(member)
+            m = re.match(CREATION_QUESTIONS["birthday"]["date"]["valid"], bot.vars["members"][member]["birthday"])
+            age = f"Cette personne agée a {int(f'20{year}') - int(m.group('year')[1:])} ans" if m.group('year') is not None else ""
+            if f"{day}/{month} {hours}:{minutes}" == f"{m.group('date')}{m.group('time')}" :
+                await bot.send(bot.channels["anniversaires"], MESSAGES["anniversaires"].format(member_mention=discord_member.mention, age=age))
 
     if f"{hours}:{minutes}" == "00:00" :
 
-        # setting logs file (new day)
+        # Nouveau fichier de logs quotidien
         if int(day) == 1 :
             if int(month) == 1 :
                 os.makedirs(f"logs/20{year}", exist_ok=True)
@@ -26,7 +26,7 @@ async def clock() :
         handler.setFormatter(formatter)
         logging.getLogger().handlers = [handler]
 
-        # deleting too old logs files
+        # Supprimer les fichiers de logs trop anciens
         try :
             date = get_time_ago(bot.config['logs_retention_period'])
             years_dirs = os.listdir('logs')

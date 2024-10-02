@@ -177,6 +177,11 @@ class GameBot(commands.Bot) :
                     case "birthday" :
                         if self.answer_is_valid(author, message.content) :
 
+                            # Si c'était le seul à avoir cette date d'anniversaire, on la retire de self.vars["birthday_datetimes"]
+                            if not(self.vars["members"][f"{author.name}#{author.discriminator}"]["birthday"] in [self.vars["members"][member]["birthday"] for member in self.vars["members"] if member != f"{author.name}#{author.discriminator}"]) :
+                                self.vars["birthday_datetimes"].remove(self.vars["members"][f"{author.name}#{author.discriminator}"]["birthday"])
+
+                            # Selon le format du message reçu, on adapte la valeur stockée (on ajoute 00:00 si l'heure n'est pas précisée) et le message de confirmation
                             birthday = ""
                             m = re.match(CREATION_QUESTIONS["birthday"]["date"]["valid"], message.content)
                             if message.content == "0" :
@@ -195,14 +200,12 @@ class GameBot(commands.Bot) :
                                 birthday = message.content
                                 response = f"J'annoncerai ton anniversaire dans le salon #anniversaires le {m.group('date')} à{m.group('time')} en précisant ton âge"
                             self.vars["members"][f"{author.name}#{author.discriminator}"]["birthday"] = birthday
+                            if birthday != "0" and not(birthday in self.vars["birthday_datetimes"]):
+                                self.vars["birthday_datetimes"].append(birthday)
                             self.write_json("members")
 
                             await self.send(author.dm_channel, response)
                             await self.send_next_question(author)
-
-                            if len(self.vars["members"][f"{author.name}#{author.discriminator}"]["questions"]) == 0 :
-                                self.vars["members"][f"{author.name}#{author.discriminator}"]["questionned"] = ""
-                                self.write_json("members")
 
                         else :
                             await self.send(author.dm_channel, "Ta réponse ne respecte pas le format attendu")
@@ -242,6 +245,8 @@ class GameBot(commands.Bot) :
                 question_type = self.vars["members"][f"{author.name}#{author.discriminator}"]["questionned"]
                 question = self.vars["members"][f"{author.name}#{author.discriminator}"]["questions"][0]
                 await self.send(author.dm_channel, CREATION_QUESTIONS[question_type][question]["text"])
+            else :
+                self.vars["members"][f"{author.name}#{author.discriminator}"]["questionned"] = ""                
         self.write_json("members")
 
 

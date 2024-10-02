@@ -71,6 +71,13 @@ async def on_ready():
         for member in [m for m in bot.guild.members if not(m.bot) and m.get_role(ROLES_IDS["7tadellien(ne)"]) is None] :
             await member.add_roles(bot.roles["7tadellien(ne)"])
 
+    # liste de toutes les dates d'anniversaire des membres du serveur (pour petite optimisation dans clock())
+    bot.vars["birthday_datetimes"] = []
+    for member in bot.vars["members"] :
+        m = re.match(CREATION_QUESTIONS["birthday"]["date"]["valid"], bot.vars["members"][member]["birthday"])
+        if bot.vars["members"][member]["birthday"] != "0" and not(bot.vars["members"][member]["birthday"] in bot.vars["birthday_datetimes"]) :
+            bot.vars["birthday_datetimes"].append(f"{m.group('date')}{m.group('time')}")
+
     if (not("informations" in bot.messages) or await bot.get_messages_by_ids_in_channel(bot.messages["informations"], "informations") == None) :
         await bot.channels["informations"].purge()
         messages = await bot.send(bot.channels["informations"], MESSAGES["informations"])
