@@ -38,7 +38,7 @@ src/
   bot_events.py
   commands_event.py
   commands_utils.py
-  \_\_main\_\_.py
+  \\_\\_main\\_\\_.py
 ```
 
 
