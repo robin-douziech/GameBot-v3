@@ -94,11 +94,11 @@ async def on_ready():
         for member in [m for m in bot.guild.members if not(m.bot)] :
             bot.config["maintenance_roles_backup"][f"{member.name}#{member.discriminator}"].extend(await backup_roles(member, remove=True))
             bot.write_config()
-            if member.get_role(bot.roles["7tadellien(ne)"]) is not None :
+            if member.get_role(ROLES_IDS["7tadellien(ne)"]) is not None :
                 await member.remove_roles("7tadellien(ne)")
-            if member.get_role(bot.roles["base"]) is not None :
+            if member.get_role(ROLES_IDS["base"]) is not None :
                 await member.remove_roles("base")
-            if member.get_role(bot.roles["maintenance"]) is None :
+            if member.get_role(ROLES_IDS["maintenance"]) is None :
                 await member.add_roles(bot.roles["maintenance"])
 
     # liste de toutes les dates d'anniversaire des membres du serveur (pour petite optimisation dans clock())

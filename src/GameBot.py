@@ -58,7 +58,7 @@ class GameBot(commands.Bot) :
         """ Decorator to apply to a command so that only members with admin role can use it """
         async def wrapper(ctx: commands.Context, *args, **kwargs) :
             author = self.guild.get_member(ctx.author.id)
-            if author.get_role(self.roles["admin"].id) != None :
+            if author.get_role(ROLES_IDS["admin"]) != None :
                 await function(ctx, *args, **kwargs)
         return wrapper
     
