@@ -220,15 +220,16 @@ async def on_member_update(before: discord.Member, after: discord.Member) :
 
     roles_to_ignore = [bot.roles[role] for role in ROLES_TO_IGNORE]
 
-    if after.roles != before.roles and any([role not in roles_to_ignore for role in set(after.roles).symmetric_difference(set(before.roles))]) :
+    if after.roles != before.roles and not(after.bot) :
         
         # suppression de rôle
-        for role in [r for r in before.roles if not(r in after.roles) and not(r in roles_to_ignore)] :
-            bot.vars["members"][f"{after.name}#{after.discriminator}"]["roles"].remove(role.id)
+        for role in [r for r in before.roles if not(r in after.roles)] :
+
+            if role.id == ROLES_IDS["base"] :
+                await after.add_roles(role)
 
         # ajout de rôle
-        for role in [r for r in after.roles if not(r in before.roles) and not(r in roles_to_ignore)] :
-            bot.vars["members"][f"{after.name}#{after.discriminator}"]["roles"].append(role.id)
+        for role in [r for r in after.roles if not(r in before.roles)] :
 
             # si le serveur est en maintenance, on ajoute l'id du rôle à la backup et on supprime le rôle
             if bot.config["maintenance"] == "up" :
@@ -238,7 +239,7 @@ async def on_member_update(before: discord.Member, after: discord.Member) :
                 await after.remove_roles(role)
 
             # si le membre n'a pas accepté les règles, on ajoute l'id du rôle à la backup et on supprime le rôle
-            if bot.channels["rules"] is not None and not(after in bot.members_having_accepted_rules) :
+            if bot.channels["rules"] is not None and not(after in bot.members_having_accepted_rules) and not(role in roles_to_ignore) :
                 if not(role.id in bot.config["rules_roles_backup"][f"{after.name}#{after.discriminator}"]) :
                     bot.config["rules_roles_backup"][f"{after.name}#{after.discriminator}"].append(role.id)
                     bot.write_config()
