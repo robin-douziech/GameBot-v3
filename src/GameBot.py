@@ -23,6 +23,9 @@ class GameBot(commands.Bot) :
         self.messages: dict[str, discord.Message] = {}
 
         self.birthday_datetimes = []
+        self.rules_message: discord.Message = None
+        self.rules_reaction: discord.Reaction = None
+        self.members_having_accepted_rules: list[discord.Member] = []
         
         self.config_filename = "json/config.json"
         self.config = {}

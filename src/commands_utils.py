@@ -64,25 +64,36 @@ async def maintenance_gamebot(ctx: commands.Context, *args, **kwargs) :
 
             for member in [m for m in bot.guild.members if not(m.bot)] :
 
-                # on restitue les rôles du membre
-                for role_id in bot.config["maintenance_roles_backup"][f"{member.name}#{member.discriminator}"] :
-                    await member.add_roles(bot.guild.get_role(role_id))
-                bot.config["maintenance_roles_backup"][f"{member.name}#{member.discriminator}"] = []
-                bot.write_config()
-
                 await member.remove_roles(bot.roles["maintenance"])
                 await member.add_roles(bot.roles["base"])
 
             # si la fonctionnalité "règles" est utilisée, on ajoute le rôle "7tadellien(ne)" uniquement aux membres ayant accepté les règles
             if bot.channels["rules"] is not None :
-                message = (await bot.get_messages_by_ids_in_channel(bot.messages["rules"][-1:], bot.channels["rules"]))[-1]
-                reaction = [r for r in message.reactions if r.emoji == chr(0x1F4DD)][0]
-                async for member in reaction.users() :
-                    await member.add_roles(bot.roles["7tadellien(ne)"])
+
+                async for member in bot.rules_reaction.users() :
+
+                    if not(member.bot) :
+
+                        await member.add_roles(bot.roles["7tadellien(ne)"])
+
+                        # on restitue les rôles du membre
+                        for role_id in bot.config["maintenance_roles_backup"][f"{member.name}#{member.discriminator}"] :
+                            await member.add_roles(bot.guild.get_role(role_id))
+                        bot.config["maintenance_roles_backup"][f"{member.name}#{member.discriminator}"] = []
+                    bot.write_config()
+
             # sinon on ajoute le rôle à tout le monde
             else :
                 for member in [m for m in bot.guild.members if not(m.bot) and m.get_role(ROLES_IDS["7tadellien(ne)"]) is None] :
+
                     await member.add_roles(bot.roles["7tadellien(ne)"])
+
+                    # on restitue les rôles du membre
+                    for role_id in bot.config["maintenance_roles_backup"][f"{member.name}#{member.discriminator}"] :
+                        await member.add_roles(bot.guild.get_role(role_id))
+                    bot.config["maintenance_roles_backup"][f"{member.name}#{member.discriminator}"] = []
+                bot.write_config()
+
 
             # si tout s'est bien passé, on passe "maintenance" à "down" et on sauvegarde
             bot.config["maintenance"] = "down"
