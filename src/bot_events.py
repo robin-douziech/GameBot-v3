@@ -225,7 +225,7 @@ async def on_member_update(before: discord.Member, after: discord.Member) :
         # suppression de rôle
         for role in [r for r in before.roles if not(r in after.roles)] :
 
-            if role.id == ROLES_IDS["base"] :
+            if role.id == ROLES_IDS["base"] and bot.config["maintenance"] == "down" :
                 await after.add_roles(role)
 
         # ajout de rôle
