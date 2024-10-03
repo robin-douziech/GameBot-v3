@@ -205,9 +205,10 @@ async def on_member_update(before: discord.Member, after: discord.Member) :
 
             # si le serveur est en maintenance, on ajoute l'id du rôle à la backup et on supprime le rôle
             if bot.config["maintenance"] == "up" :
-                bot.config["maintenance_roles_backup"][f"{after.name}#{after.discriminator}"].append(role.id)
+                if not(role.id in bot.config["maintenance_roles_backup"][f"{after.name}#{after.discriminator}"]) :
+                    bot.config["maintenance_roles_backup"][f"{after.name}#{after.discriminator}"].append(role.id)
+                    bot.write_config()
                 await after.remove_roles(role)
-                bot.write_config()
 
         bot.write_json("members")
 
