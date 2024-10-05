@@ -17,15 +17,28 @@ BOT_VARS_DEFAULTS = {
         'id': 0,
         'questionned': '',
         'questions': [],
-        'object_being_created': {
-            'type': '',
-            'id': 0
-        },
-        'birthday': "0",
-        'roles': []
+        'object_id': 0,
+        'birthday': "0"
     },
     "roles": {},
-    "events": {},
+    "events": {
+        "name": "",
+        "host": "",
+        "place": "",
+        "datetime": "",
+        "description": "",
+        "nb_max_guests": 0,
+
+        "invited_guests": [],
+        "waiting_guests": [],
+        "present_guests": [],
+
+        "invitations_channel_id": 0,
+        "soirées_channel_id": 0,
+        "logs_channel_id": 0,
+        
+        "created": False
+    },
     "config": {
         "hours_offset": 0,
         "logs_retention_period": "1 month",
@@ -33,6 +46,24 @@ BOT_VARS_DEFAULTS = {
         "maintenance_roles_backup": {},
         "rules_roles_backup": {}
     }
+}
+
+EVENT_CHANNEL_PERMISSIONS = {
+    "invitations": {
+        "read_messages": True,
+        "send_messages": False,
+        "create_instant_invite": False
+    },
+    "soirées": {
+        "read_messages": True,
+        "send_messages": True,
+        "create_instant_invite": False
+    },
+    "logs": {
+        "read_messages": True,
+        "send_messages": False,
+        "create_instant_invite": False
+    },
 }
 
 MESSAGES = {
@@ -52,7 +83,21 @@ Voici une présentation des différentes catégories du serveur :
     "rules": """Ici c'est les règles, t'as intérêt à les respecter""",
     "maintenance": """Le serveur est temporairement indisponible pour cause de maintenance. Je ne sais pas exactement ce que fait {owner_mention}, il ajoute peut-être des salon ou me met à jour, qui sait ?\
 J'espère que cela ne durera pas trop longtemps, veuillez nous excuser pour la gêne occasionnée.""",
-    "anniversaires": """C'est l'anniversaire de {member_mention} aujourd'hui ! {age}"""
+    "anniversaires": """C'est l'anniversaire de {member_mention} aujourd'hui ! {age}""",
+    "invitation": """Hello @here !
+
+Vous avez été invité à une soirée par {host_mention} {host}
+
+Voici quelques informations sur cette soirée :
+Lieu : {lieu}
+Date : {date}
+Heure : {heure}
+Description : {description}
+
+Réagis avec :+1: si tu souhaites participer à cette soirée
+
+{NB}
+"""
 }
 
 # date: JJ/MM
@@ -61,6 +106,16 @@ J'espère que cela ne durera pas trop longtemps, veuillez nous excuser pour la g
 # hours: ([0-1][0-9]|2[0-3])
 # minutes: [0-5][0-9]
 birthday_date_regexp = r"^(((?P<date>((0[1-9]|[1-2][0-9]|3[0-1])/(01|03|05|07|08|10|12))|((0[1-9]|[1-2][0-9]|30)/(04|06|09|11))|((0[1-9]|[1-2][0-9])/02))(?P<year>/\d{4}){0,1}(?P<time> (?P<hours>[0-1][0-9]|2[0-3]):(?P<minutes>[0-5][0-9])){0,1})|0)$"
+
+# datetime: "date time" (JJ/MM/AAAA HH:MM)
+# date:     "day/month/year"
+# time:     "hour:minute"
+# day:      01 - 31
+# month     01 - 12
+# year      \d{4}
+# hour      00 - 23
+# minute    00 - 59
+event_datetime_regexp = r"^(?P<datetime>(?P<date>(?P<day>0[1-9]|[1-2][0-9]|3[0-1])/(?P<month>0[1-9]|1[0-2])/(?P<year>\d{4})) (?P<time>(?P<hour>[0-1][0-9]|2[0-3]):(?P<minute>[0-5][0-9])))$"
 
 CREATION_QUESTIONS = {
     "birthday": {
@@ -71,5 +126,74 @@ Si tu ne veux pas que j'annonce ton anniversaire, envoie-moi 0.
 """,
             "valid": birthday_date_regexp
         }
+    },
+    "event": {
+        "name": {
+            "text": "Quel nom veux-tu donner à cette soirée ? (ça sera le nom donné aux salons de discussion)",
+            "valid": r"^(.+)$"
+        },
+        "description": {
+            "text": "Donne-moi une description pour cette soirée. Celle-ci sera partagée avec les invités de la soirée",
+            "valid": r"^(.+)$"
+        },
+        "host": {
+            "text": "Sous quel nom veux-tu que je t'appelle dans le message d'annonce de la soirée ? Cela peut servir si certains invités ne connaissent pas ton pseudo. Si tu veux que je donne uniquement ton pseudo, envoie-moi \".\"",
+            "valid": r"^(.+)$"
+        },
+        "place": {
+            "text": "Où se déroulera cette soirée ?",
+            "valid": r"^(.+)$"
+        },
+        "datetime": {
+            "text": "Quand se déroulera cette soirée ? format : JJ/MM/AAAA HH:MM",
+            "valid": event_datetime_regexp
+        },
+        "nb_max_guests": {
+            "text": "Combien veux-tu qu'il y ait de personne au maximum à cette soirée (toi compris) ? Tu pourras inviter plus de personnes que cette valeur mais toutes ne pourront pas accepter l'invitation, je m'occuperai de gérer la liste d'attente si trop de personnes acceptent l'invitation",
+            "valid": r"^([1-9]\d*|0)$"
+        }
     }
+}
+
+HELP_MESSAGES = {
+
+
+    "event": """Cette commande sert à organiser des soirées, elle s'utilise de la façon suivante :
+
+!event OPTION
+
+Options :
+    create - crée une soirée 
+    read [id] - affiche des informations sur toutes les soirées que tu as créé ou une soirée en particulier
+""",
+
+
+    "event create": """Cette commande sert à créer une soirée. Tu pourras ensuite inviter des membres du serveur à cette soirée grâce à la commande !invite.
+Si tu utilises la commande "!event create" pour créer une soirée, je vais te guider dans la création de celle-ci en te posant des questions. Tes réponses me servirons à remplir les différents attributs de la soirée que voici :
+- le nom que tu veux donner à le soirée (il servira à nommer les salons dédiés à la soirée)
+- une description pour la soirée. Elle sera affichée dans le message d'invitation à la soirée
+- ton nom (pour l'afficher dans le message d'invitation, cela peut être utile si certains invités ne savent pas qui se cache derrière ton pseudo). Si tu ne veux pas que je donne ton nom (et donc que je mette uniquement ton pseudo dans le message d'invitation), répond-moi à cette question avec "."
+- le lieu où se déroulera la soirée
+- la date et l'heure de la soirée (au format "JJ/MM/AAAA HH:MM")
+- le nombre maximum de participants à la soirée (toi compris). Tu pourras inviter plus de participants que ce nombre mais tous ne pourront pas accepter l'invitation si tu le fait (premier arrivé premier servi). Je m'occupe de gérer la liste d'attente si trop de personnes acceptent l'invitation. Si tu ne souhaites pas renseigner de nombre maximum de participants, répond à cette question avec "0"
+""",
+
+
+    "event read": """Cette commande sert à obtenir des informations sur toutes les soirées que tu as créé ou une de ces soirées en particulier. Elle s'utilise de la façon suivante :
+
+!event read [__id__]
+
+Si tu ne renseignes pas l'identifiant, je te répondrai avec une liste des soirées que tu as créé en faisant correspondre l'identifiant de la soirée avec son nom.
+
+Si tu renseignes l'identifiant de la soirée, je te donnerai toutes les informations utiles sur la soirée en question
+""",
+
+
+    "event delete": """Cette commande sert à supprimer une soirée que tu as créée. Elle s'utilise de la façon suivante :
+
+!event delete __id__
+""",
+
+
+    "invite": """"""
 }

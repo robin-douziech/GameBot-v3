@@ -5,29 +5,39 @@ async def on_ready():
 
     bot.guild = bot.get_guild(BOT_GUILD_ID)
     bot.owner = bot.guild.get_member(BOT_OWNER_ID)
+    bot.categories = {category: discord.utils.get(bot.guild.categories, id=CATEGORY_IDS[category]) for category in CATEGORY_IDS}
     bot.channels = {channel: bot.guild.get_channel(CHANNEL_IDS[channel]) for channel in CHANNEL_IDS}
     bot.roles = {role: bot.guild.get_role(ROLES_IDS[role]) for role in ROLES_IDS}
 
-    # load variables and set defaults
+    # on récupère les variables (et on vérifie qu'elles ont le bon format)
     for var_name in bot.vars :
         with open(bot.files[var_name], "rt") as f :
             bot.vars[var_name] = db_default_config(json.load(f), bot.defaults[var_name])
             bot.write_json(var_name)
+
+    # on récupère les salons des soirées
+    for event_idstr in bot.vars["events"] :
+        for string in ["invitations", "soirées", "logs"] :
+            bot.channels[f"{string}_{event_idstr}"] = bot.guild.get_channel(bot.vars["events"][event_idstr][f"{string}_channel_id"])
+    bot.write_json("events")
+
+    # on supprime les salon des soirées inexistantes
+    for string in ["invitations", "soirées", "logs"] :
+        category = bot.categories[string]
+        for channel in category.channels :
+            if not(channel.id in [c.id for c in bot.channels.values()]) :
+                await channel.delete()
     
-    # load config and set default
+    # on récupère la config (et on vérifie qu'elle a le bon format)
     with open("json/config.json", "rt") as fread :
         bot.config = default_config(json.load(fread), bot.defaults["config"])
         bot.write_config()
 
-    bot.config["maintenance_roles_backup"] = {x: bot.config["maintenance_roles_backup"][x] if x in bot.config["maintenance_roles_backup"] else [] for x in bot.vars["members"]}
-    bot.config["rules_roles_backup"] = {x: bot.config["rules_roles_backup"][x] if x in bot.config["rules_roles_backup"] else [] for x in bot.vars["members"]}
-    bot.write_config()
-
-    # load bot messages
+    # on récupère les messages permanents du bot
     with open("json/messages.json", "rt") as f :
          bot.messages = json.load(f)    
 
-    # setting logs file
+    # on définit le fichier de logs
     (day, month, year) = bot.get_current_datetime()[:3]
     if not(os.path.exists(f"logs/20{year}/{month}/")) :
         os.makedirs(f"logs/20{year}/{month}")
@@ -36,7 +46,7 @@ async def on_ready():
     handler.setFormatter(formatter)
     logging.getLogger().handlers = [handler]
 
-    # guild members
+    # on gère les membres du serveur
     guild_members: list[str] = []
     members_to_add: list[str] = []
     members_to_remove: list[str] = []
@@ -53,10 +63,9 @@ async def on_ready():
     await bot.add_members(members_to_add)
     bot.remove_members(members_to_remove)
 
-    roles_to_ignore = [bot.roles[role] for role in ROLES_TO_IGNORE]
-    for member in bot.vars["members"] :
-        bot.vars["members"][member]["roles"] = [role.id for role in bot.get_discord_member(member).roles if not(role in roles_to_ignore)]
-    bot.write_json("members")
+    bot.config["maintenance_roles_backup"] = {x: bot.config["maintenance_roles_backup"][x] if x in bot.config["maintenance_roles_backup"] else [] for x in bot.vars["members"]}
+    bot.config["rules_roles_backup"] = {x: bot.config["rules_roles_backup"][x] if x in bot.config["rules_roles_backup"] else [] for x in bot.vars["members"]}
+    bot.write_config()
 
     # MESSAGES PERMANENTS
     #
@@ -197,6 +206,14 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent) :
                 bot.write_config()
             else :
                 await message.remove_reaction(payload.emoji, author)
+            return
+
+        # acceptation de l'invitation à une soirée
+        for event_idstr in bot.vars["events"] :
+            if channel == bot.channels[f"invitations_{event_idstr}"] :
+                if f"{author.name}#{author.discriminator}" in bot.vars["events"][event_idstr]["invited_guests"] and payload.emoji.name == chr(0x1F44D) :
+                    await bot.add_member_to_waiting_guests(event_idstr, author)
+                return
 
 @bot.event
 async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent) :
@@ -214,6 +231,14 @@ async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent) :
             await author.remove_roles(bot.roles["7tadellien(ne)"])
             bot.config["rules_roles_backup"][f"{author.name}#{author.discriminator}"] = await backup_roles(author, remove=True)
             bot.write_config()
+            return
+        
+        # annulation de la participation à une soirée
+        for event_idstr in bot.vars["events"] :
+            if channel == bot.channels[f"invitations_{event_idstr}"] :
+                if f"{author.name}#{author.discriminator}" in bot.vars["events"][event_idstr]["waiting_guests"] + bot.vars["events"][event_idstr]["present_guests"] and payload.emoji.name == chr(0x1F44D) :
+                    await bot.cancel_participation(event_idstr, author)
+                return        
             
 @bot.event
 async def on_member_update(before: discord.Member, after: discord.Member) :
