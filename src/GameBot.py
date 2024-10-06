@@ -312,12 +312,13 @@ class GameBot(commands.Bot) :
                 for member in [m for m in self.guild.members if not(m.bot) and m != author] :
                     await channel.set_permissions(member, read_messages=False, send_messages=False, create_instant_invite=False)
                 self.channels[f"bot_{author.name}#{author.discriminator}"] = channel
-            if ctx.channel == self.channels[f"bot_{author.name}#{author.discriminator}"] :
+            if ctx.channel == self.channels[f"bot_{author.name}#{author.discriminator}"] or ctx.channel == author.dm_channel :
                 await function(ctx, *args, **kwargs)
             else :
                 message = await ctx.channel.fetch_message(ctx.message.id)
                 await ctx.channel.delete_messages([message])
-                await self.channels[f"bot_{author.name}#{author.discriminator}"].send("Je n'exécute que les commandes qui me sont envoyées ici")
+                await self.send(self.channels[f"bot_{author.name}#{author.discriminator}"], f"Pour utiliser mes commandes, ça se passe ici ou par messages privés")
+                await self.send(author.dm_channel, f"Pour utiliser mes commandes, ça se passe ici ... ou là bas {self.channels[f'bot_{author.name}#{author.discriminator}'].mention}")
         return wrapper
             
     async def process_msg(self, message: discord.Message) :
@@ -358,11 +359,11 @@ class GameBot(commands.Bot) :
                                 self.birthday_datetimes.append(birthday)
                             self.write_json("members")
 
-                            await self.send(self.channels[f"bot_{author.name}#{author.discriminator}"], response)
-                            await self.send_next_question(author)
+                            await self.send(message.channel, response)
+                            await self.send_next_question(message.channel, author)
 
                         else :
-                            await self.send(self.channels[f"bot_{author.name}#{author.discriminator}"], "Ta réponse ne respecte pas le format attendu")
+                            await self.send(message.channel, "Ta réponse ne respecte pas le format attendu")
 
                     case 'event' :
                         if self.answer_is_valid(author, message.content) :
@@ -371,7 +372,7 @@ class GameBot(commands.Bot) :
                             question = self.vars["members"][f"{author.name}#{author.discriminator}"]["questions"][0]
                             self.vars["events"][event_idstr][question] = message.content
                             self.write_json("events")
-                            await self.send_next_question(author)
+                            await self.send_next_question(message.channel, author)
 
                             if not(self.vars["members"][f"{author.name}#{author.discriminator}"]["questionned"]) :
 
@@ -490,13 +491,13 @@ class GameBot(commands.Bot) :
             await messages[-1].add_reaction(emoji)
         return messages
     
-    async def send_next_question(self, author: discord.Member) :
+    async def send_next_question(self, channel: discord.TextChannel, author: discord.Member) :
         if len(self.vars["members"][f"{author.name}#{author.discriminator}"]["questions"]) > 0 :
             self.vars["members"][f"{author.name}#{author.discriminator}"]["questions"].pop(0)
             if len(self.vars["members"][f"{author.name}#{author.discriminator}"]["questions"]) > 0 :
                 question_type = self.vars["members"][f"{author.name}#{author.discriminator}"]["questionned"]
                 question = self.vars["members"][f"{author.name}#{author.discriminator}"]["questions"][0]
-                await self.send(self.channels[f"bot_{author.name}#{author.discriminator}"], CREATION_QUESTIONS[question_type][question]["text"])
+                await self.send(channel, CREATION_QUESTIONS[question_type][question]["text"])
             else :
                 self.vars["members"][f"{author.name}#{author.discriminator}"]["questionned"] = ""
                 self.vars["members"][f"{author.name}#{author.discriminator}"]["object_id"] = 0

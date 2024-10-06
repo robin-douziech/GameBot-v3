@@ -9,9 +9,9 @@ async def birthday_gamebot(ctx: commands.Context, *args, **kwargs) :
         bot.vars["members"][f"{author.name}#{author.discriminator}"]["questions"] = ["", *list(CREATION_QUESTIONS[question_type].keys())]
         bot.vars["members"][f"{author.name}#{author.discriminator}"]["questionned"] = question_type
         bot.write_json("members")
-        await bot.send_next_question(author)
+        await bot.send_next_question(ctx.channel, author)
     else:
-        await bot.send(bot.channels[f"bot_{author.name}#{author.discriminator}"], "Tu as déjà une autre commande en cours")
+        await bot.send(ctx.channel, "Tu as déjà une autre commande en cours")
 
 @bot.command(name="kill")
 @bot.admin_command
@@ -32,7 +32,7 @@ async def logs_gamebot(ctx: commands.Context, nb_lines: int = 10, *args, **kwarg
             if len(msg) > nb_lines :
                 msg = msg[-int(nb_lines):]
             txt = "\n".join(msg) + "\n"
-            await bot.send(bot.channels[f"bot_{author.name}#{author.discriminator}"], txt, wrappers=('```', '```'))
+            await bot.send(ctx.channel, txt, wrappers=('```', '```'))
     except Exception as e :
         bot.log(f"An exception occured while reading logs: {e}", 'error')
 
@@ -49,6 +49,8 @@ async def maintenance_gamebot(ctx: commands.Context, *args, **kwargs) :
 
             for member in [m for m in bot.guild.members if not(m.bot)] :
 
+                await bot.channels[f"bot_{member.name}#{member.discriminator}"].set_permissions(member, read_messages=False, send_messages=False, create_instant_invite=False)
+
                 # on garde une trace des roles du membre et on les retire
                 bot.config["maintenance_roles_backup"][f"{member.name}#{member.discriminator}"] = await backup_roles(member, remove=True)
 
@@ -63,6 +65,8 @@ async def maintenance_gamebot(ctx: commands.Context, *args, **kwargs) :
         elif args[0] == "down" and bot.config["maintenance"] == "up" :
 
             for member in [m for m in bot.guild.members if not(m.bot)] :
+
+                await bot.channels[f"bot_{member.name}#{member.discriminator}"].set_permissions(member, read_messages=True, send_messages=True, create_instant_invite=False)
 
                 await member.remove_roles(bot.roles["maintenance"])
                 await member.add_roles(bot.roles["base"])

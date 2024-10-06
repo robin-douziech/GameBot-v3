@@ -121,11 +121,10 @@ async def on_ready():
 
             for member in [m for m in bot.guild.members if not(m.bot)] :
 
-                if member.get_role(ROLES_IDS["base"]) is None :
-                    await member.add_roles(bot.roles["base"])
-
                 # si le membre a accepté les règles
                 if member in bot.members_having_accepted_rules :
+
+                    await bot.channels[f"bot_{member.name}#{member.discriminator}"].set_permissions(member, read_messages=True, send_messages=True, create_instant_invite=False)
 
                     for role_id in bot.config["rules_roles_backup"][f"{member.name}#{member.discriminator}"] :
                         if member.get_role(role_id) is None :
@@ -139,6 +138,8 @@ async def on_ready():
                 # si le membre n'a pas accepté les règles
                 else :
 
+                    await bot.channels[f"bot_{member.name}#{member.discriminator}"].set_permissions(member, read_messages=False, send_messages=False, create_instant_invite=False)
+
                     bot.config["rules_roles_backup"][f"{member.name}#{member.discriminator}"] = await backup_roles(member, remove=True)
                     bot.write_config()
 
@@ -150,6 +151,8 @@ async def on_ready():
 
             for member in [m for m in bot.guild.members if not(m.bot)] :
 
+                await bot.channels[f"bot_{member.name}#{member.discriminator}"].set_permissions(member, read_messages=True, send_messages=True, create_instant_invite=False)
+
                 if member.get_role(ROLES_IDS["base"]) is None :
                     await member.add_roles(bot.roles["base"])
 
@@ -159,6 +162,7 @@ async def on_ready():
     else :
 
         for member in [m for m in bot.guild.members if not(m.bot)] :
+            await bot.channels[f"bot_{member.name}#{member.discriminator}"].set_permissions(member, read_messages=False, send_messages=False, create_instant_invite=False)
             bot.config["maintenance_roles_backup"][f"{member.name}#{member.discriminator}"].extend(await backup_roles(member, remove=True))
             bot.write_config()
             if member.get_role(ROLES_IDS["7tadellien(ne)"]) is not None :
@@ -181,13 +185,14 @@ async def on_ready():
 @bot.event
 async def on_message(message: discord.Message) :
     author = bot.guild.get_member(message.author.id)
-    if message.content.startswith(bot.command_prefix) :
-        if message.content[1:].split(' ')[0] in [c.name for c in bot.commands] :
-            await bot.process_commands(message)
+    if bot.config["maintenance"] == "down" or author.get_role(bot.roles["admin"]) is not None :
+        if message.content.startswith(bot.command_prefix) :
+            if message.content[1:].split(' ')[0] in [c.name for c in bot.commands] :
+                await bot.process_commands(message)
+            else :
+                await bot.send(message.channel, "Je ne connais pas cette commande")
         else :
-            await bot.send(bot.channels[f"bot_{author.name}#{author.discriminator}"], "Je ne connais pas cette commande")
-    else :
-        await bot.process_msg(message)
+            await bot.process_msg(message)
 
 @bot.event
 async def on_member_join(member: discord.Member) :
@@ -212,6 +217,7 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent) :
         # réaction au message des règles du serveur
         if "rules" in bot.messages and len(bot.messages["rules"]) > 0 and message.id == bot.messages["rules"][-1] :
             if payload.emoji.name == chr(0x1F4DD) :
+                await bot.channels[f"bot_{author.name}#{author.discriminator}"].set_permissions(author, read_messages=True, send_messages=True, create_instant_invite=False)
                 await author.add_roles(bot.roles["7tadellien(ne)"])
                 for role_id in bot.config["rules_roles_backup"][f"{author.name}#{author.discriminator}"] :
                     await author.add_roles(bot.guild.get_role(role_id))
@@ -241,6 +247,7 @@ async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent) :
 
         # réaction au message des règles du serveur
         if "rules" in bot.messages and len(bot.messages["rules"]) > 0 and message.id == bot.messages["rules"][-1] and payload.emoji.name == chr(0x1F4DD) :
+            await bot.channels[f"bot_{author.name}#{author.discriminator}"].set_permissions(author, read_messages=False, send_messages=False, create_instant_invite=False)
             await author.remove_roles(bot.roles["7tadellien(ne)"])
             bot.config["rules_roles_backup"][f"{author.name}#{author.discriminator}"] = await backup_roles(author, remove=True)
             bot.write_config()
