@@ -62,12 +62,7 @@ class GameBot(commands.Bot) :
                 await discord_member.add_roles(self.roles["7tadellien(ne)"])
 
             # on lui crée son salon de discussion avec le bot
-            channel = await self.guild.create_text_channel("utiliser-gamebot-ici", category=self.categories["bot"])
-            await channel.edit(topic=pseudo)
-            await channel.set_permissions(discord_member, read_messages=True, send_messages=True, create_instant_invite=False)
-            for member in [m for m in self.guild.members if not(m.bot) and m != discord_member] :
-                await channel.set_permissions(member, read_messages=False, send_messages=False, create_instant_invite=False)
-            self.channels[f"bot_{pseudo}"] = channel
+            await self.create_command_channel_for_member(self.get_discord_member(pseudo))
 
             # on l'enregistre dans bot.vars["members"]
             self.vars["members"][pseudo] = BOT_VARS_DEFAULTS["members"]
@@ -155,6 +150,17 @@ class GameBot(commands.Bot) :
 
             await self.send(self.channels["logs-gamebot"], f"Je ne peux pas annuler la participation de {member.display_name} à la soirée '{self.vars['events'][event_idstr]['name']}' (event_idstr = {event_idstr})")
             raise Exception(f"Cannot cancel participation of member '{member.name}#{member.discriminator}' to the event with id '{event_idstr}'")
+
+    async def create_command_channel_for_member(self, member: discord.Member) :
+        self.channels[f"bot_{member.name}#{member.discriminator}"] = await self.guild.create_text_channel(
+            name="utilise-gamebot-ici",
+            category=self.categories["bot"],
+            topic=f"{member.name}#{member.discriminator}",
+            overwrites={
+                member: discord.PermissionOverwrite(read_messages=True, send_messages=True, create_instant_invite=False),
+                **{_member: discord.PermissionOverwrite(read_messages=False, send_messages=False, create_instant_invite=False) for _member in [m for m in self.guild.members if not(m.bot) and m != member]}
+            }
+        )
     
     async def delete_event(self, event_idstr: str) :
 
@@ -306,12 +312,7 @@ class GameBot(commands.Bot) :
         async def wrapper(ctx: commands.Context, *args, **kwargs):
             author = self.guild.get_member(ctx.author.id)
             if not(f"bot_{author.name}#{author.discriminator}" in self.channels) :
-                channel = await self.guild.create_text_channel("utiliser-gamebot-ici", category=self.categories["bot"])
-                await channel.edit(topic=f"{author.name}#{author.discriminator}")
-                await channel.set_permissions(author, read_messages=True, send_messages=True, create_instant_invite=False)
-                for member in [m for m in self.guild.members if not(m.bot) and m != author] :
-                    await channel.set_permissions(member, read_messages=False, send_messages=False, create_instant_invite=False)
-                self.channels[f"bot_{author.name}#{author.discriminator}"] = channel
+                await self.create_command_channel_for_member(author)
             if ctx.channel == self.channels[f"bot_{author.name}#{author.discriminator}"] or ctx.channel == author.dm_channel :
                 await function(ctx, *args, **kwargs)
             else :

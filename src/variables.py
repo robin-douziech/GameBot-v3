@@ -155,54 +155,76 @@ Si tu ne veux pas que j'annonce ton anniversaire, envoie-moi 0.
     }
 }
 
+HELP = """
+"""
+
 HELP_MESSAGES = {
 
+####################################################################################################################################################################
 
     "event": """Cette commande sert à organiser des soirées, elle s'utilise de la façon suivante :
 
-!event OPTION
+!event __option__
 
 Options :
-    create - crée une soirée 
-    read [id] - affiche des informations sur toutes les soirées que tu as créé ou une soirée en particulier
+create - crée une soirée 
+read [__event_id__] - affiche des informations sur toutes les soirées que tu as créé ou une soirée en particulier
+delete __event_id__ - supprimer une soirée
+
+Pour plus de détails sur une option, tu peux utiliser la commande "!help event __option__"
 """,
 
+####################################################################################################################################################################
 
-    "event create": """Cette commande sert à créer une soirée. Tu pourras ensuite inviter des membres du serveur à cette soirée grâce à la commande !invite.
-Si tu utilises la commande "!event create" pour créer une soirée, je vais te guider dans la création de celle-ci en te posant des questions. Tes réponses me servirons à remplir les différents attributs de la soirée que voici :
-- le nom que tu veux donner à le soirée (il servira à nommer les salons dédiés à la soirée)
-- une description pour la soirée. Elle sera affichée dans le message d'invitation à la soirée
-- ton nom (pour l'afficher dans le message d'invitation, cela peut être utile si certains invités ne savent pas qui se cache derrière ton pseudo). Si tu ne veux pas que je donne ton nom (et donc que je mette uniquement ton pseudo dans le message d'invitation), répond-moi à cette question avec "."
+    "event create": """Cette commande sert à créer une soirée. Tu pourras ensuite inviter des membres du serveur à cette soirée grâce à la commande "!invite".
+Si tu utilises la commande "!event create" pour créer une soirée, je vais te guider dans la création de celle-ci en te posant des questions (attention: je mets\
+parfois un peu de temps à poser la première question car je fais d'autres choses avant de commencer à poser les questions).\
+Tes réponses me servirons à remplir les différents attributs de la soirée que voici :
+- le nom que tu veux donner à la soirée (il servira à nommer les salons dédiés à celle-ci)
+- une description pour la soirée. Elle sera affichée dans le message d'invitation celle-ci
+- ton nom (pour l'afficher dans le message d'invitation, cela peut être utile si certains invités ne savent pas qui se cache derrière ton pseudo).\
+Si tu ne veux pas que je donne ton nom (et donc que je mette uniquement ton pseudo dans le message d'invitation), répond-moi à cette question avec "."
 - le lieu où se déroulera la soirée
 - la date et l'heure de la soirée (au format "JJ/MM/AAAA HH:MM")
-- le nombre maximum de participants à la soirée (toi compris). Tu pourras inviter plus de participants que ce nombre mais tous ne pourront pas accepter l'invitation si tu le fait (premier arrivé premier servi). Je m'occupe de gérer la liste d'attente si trop de personnes acceptent l'invitation. Si tu ne souhaites pas renseigner de nombre maximum de participants, répond à cette question avec "0"
+- le nombre maximum de participants à la soirée (toi compris). Tu pourras inviter plus de participants que ce nombre mais tous ne pourront pas accepter\
+l'invitation si tu le fais (premier arrivé premier servi). Je m'occupe de gérer la liste d'attente si trop de personnes acceptent l'invitation. Si tu ne\
+souhaites pas renseigner de nombre maximum de participants, répond à cette question avec "0"
 """,
 
+####################################################################################################################################################################
 
     "event read": """Cette commande sert à obtenir des informations sur toutes les soirées que tu as créé ou une de ces soirées en particulier. Elle s'utilise de la façon suivante :
 
-!event read [__id__]
+!event read [__event_id__]
 
-Si tu ne renseignes pas l'identifiant, je te répondrai avec une liste des soirées que tu as créé en faisant correspondre l'identifiant de la soirée avec son nom.
-
-Si tu renseignes l'identifiant de la soirée, je te donnerai toutes les informations utiles sur la soirée en question
+Si tu ne renseignes pas l'identifiant, je te répondrai avec une liste des soirées que tu as créé en faisant correspondre l'identifiant de la soirée avec son nom.\
+Si tu renseignes l'identifiant de la soirée, je te donnerai toutes les informations utiles sur la soirée en question.
 """,
 
+####################################################################################################################################################################
 
     "event delete": """Cette commande sert à supprimer une soirée que tu as créée. Elle s'utilise de la façon suivante :
 
-!event delete __id__
+!event delete __event_id__
+
+Si la soirée n'est pas encore passée, je préviendrai tous les membres du serveur invités que celle-ci est annulée.
 """,
 
+####################################################################################################################################################################
 
     "invite": """Cette commande sert à inviter un membre ou un rôle du serveur à une soirée que tu as créée. Elle s'utilise de la façon suivante :
 
-!invite __event_id__ __pseudo__
+!invite __event_id__ __guest__
 
-ou
+avec :
+- event_id: l'identifiant de la soirée à laquelle tu souhaites inviter quelqu'un (tu peux utiliser la commande "!event read" pour connaitre les identifiants de tes soirées)
+- guest: ce paramètre représente la personne ou le rôle que tu souhaites inviter. Il peut être :
+  - le pseudo d'un membre (celui que tu vois dans la liste des membres)
+  - l'identifiant d'un membre
+  - la mention d'un rôle (mentionner le rôle). Malheureusement, la mention ne fonctionne pas pour inviter un membre car on ne peut pas mentionner quelqu'un dans un salon auquel il n'a pas accès.
+""",
 
-!invite __event_id__ @__rôle__
+####################################################################################################################################################################
 
-
-"""
+    "uninvite": """Cette commande sert à annuler l'invitation d'un membre ou un rôle à une soirée. Elle s'utilise exactement de la même manière que la commande "!invite" mais aura l'effet inverse."""
 }

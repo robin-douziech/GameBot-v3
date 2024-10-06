@@ -96,8 +96,8 @@ async def invite_gamebot(ctx: commands.Context, *args, **kwargs) :
             for pseudo in bot.vars["members"] :
                 member = bot.get_discord_member(pseudo)
                 if (args[1] == member.mention
-                    or args[1] == member.id
-                    or (args[1] == member.display_name and len([m.display_name for m in bot.guild.members]) == 1)) :
+                    or (re.match(r"^(\d+)$", args[1]) and int(args[1]) == member.id)
+                    or (args[1] == member.display_name and len([m.display_name for m in bot.guild.members if m.display_name == args[1]]) == 1)) :
                     if not(pseudo in bot.vars["events"][event_idstr]["invited_guests"]
                                    + bot.vars["events"][event_idstr]["waiting_guests"]
                                    + bot.vars["events"][event_idstr]["present_guests"]) :

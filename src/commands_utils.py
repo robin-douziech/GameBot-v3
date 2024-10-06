@@ -13,6 +13,14 @@ async def birthday_gamebot(ctx: commands.Context, *args, **kwargs) :
     else:
         await bot.send(ctx.channel, "Tu as déjà une autre commande en cours")
 
+@bot.command(name="help")
+@bot.private_command
+async def help_gamebot(ctx: commands.Context, *args, **kwargs) :
+    if len(args) > 0 :
+        await bot.send(ctx.channel, HELP_MESSAGES[" ".join(args)])
+    else :
+        await bot.send(ctx.channel, HELP)
+
 @bot.command(name="kill")
 @bot.admin_command
 @bot.private_command
@@ -44,6 +52,8 @@ async def maintenance_gamebot(ctx: commands.Context, *args, **kwargs) :
 
         if args[0] == "up" and bot.config["maintenance"] == "down" :
 
+            bot.config["maintenance"] = "up"
+
             # variable pour garder une trace des roles de chaque membre (pour les restituer à la fin de la maintenance)
             bot.config["maintenance_roles_backup"] = {}
 
@@ -58,11 +68,11 @@ async def maintenance_gamebot(ctx: commands.Context, *args, **kwargs) :
                 await member.remove_roles(bot.roles["base"])
                 await member.add_roles(bot.roles["maintenance"])
 
-            # si tout s'est bien passé, on passe "maintenance" à "up" et on sauvegarde
-            bot.config["maintenance"] = "up"
             bot.write_config()
 
         elif args[0] == "down" and bot.config["maintenance"] == "up" :
+
+            bot.config["maintenance"] = "down"
 
             for member in [m for m in bot.guild.members if not(m.bot)] :
 
@@ -98,8 +108,5 @@ async def maintenance_gamebot(ctx: commands.Context, *args, **kwargs) :
                     bot.config["maintenance_roles_backup"][f"{member.name}#{member.discriminator}"] = []
                 bot.write_config()
 
-
-            # si tout s'est bien passé, on passe "maintenance" à "down" et on sauvegarde
-            bot.config["maintenance"] = "down"
             bot.write_config()
 

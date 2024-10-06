@@ -69,18 +69,9 @@ async def on_ready():
 
     # salon pour utiliser le bot
     for channel in bot.categories["bot"].channels :
-        pseudo = channel.topic
-        if pseudo in bot.vars["members"] :
-            bot.channels[f"bot_{pseudo}"] = channel
-        else :
-            await channel.delete()
-    for member in [m for m in bot.guild.members if not(m.bot) and not(f"bot_{m.name}#{m.discriminator}" in bot.channels)] :
-        channel = await bot.guild.create_text_channel("utiliser-gamebot-ici", category=bot.categories["bot"])
-        await channel.set_permissions(member, read_messages=True, send_messages=True, create_instant_invite=False)
-        await channel.edit(topic=f"{member.name}#{member.discriminator}")
-        for _member in [m for m in bot.guild.members if not(m.bot) and m != member] :
-            await channel.set_permissions(_member, read_messages=False, send_messages=False, create_instant_invite=False)
-        bot.channels[f"bot_{member.name}#{member.discriminator}"] = channel
+        await channel.delete()
+    for member in [m for m in bot.guild.members if not(m.bot)] :
+        await bot.create_command_channel_for_member(member)
 
     # MESSAGES PERMANENTS
     #
@@ -184,14 +175,14 @@ async def on_ready():
 
 @bot.event
 async def on_message(message: discord.Message) :
-    author = bot.guild.get_member(message.author.id)
-    if bot.config["maintenance"] == "down" or author.get_role(bot.roles["admin"]) is not None :
+    author = message.author
+    if not(author.bot) and (bot.config["maintenance"] == "down" or author.get_role(ROLES_IDS["admin"]) is not None) :
         if message.content.startswith(bot.command_prefix) :
             if message.content[1:].split(' ')[0] in [c.name for c in bot.commands] :
                 await bot.process_commands(message)
             else :
                 await bot.send(message.channel, "Je ne connais pas cette commande")
-        else :
+        elif message.channel == author.dm_channel or message.channel == bot.channels[f"bot_{author.name}#{author.discriminator}"] :
             await bot.process_msg(message)
 
 @bot.event
