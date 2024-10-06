@@ -16,10 +16,21 @@ async def birthday_gamebot(ctx: commands.Context, *args, **kwargs) :
 @bot.command(name="help")
 @bot.private_command
 async def help_gamebot(ctx: commands.Context, *args, **kwargs) :
+    author = bot.guild.get_member(ctx.author.id)
     if len(args) > 0 :
         await bot.send(ctx.channel, HELP_MESSAGES[" ".join(args)])
     else :
-        await bot.send(ctx.channel, HELP)
+        help_message = "Voici la liste des commandes que tu peux utiliser :\n\n"
+        help_message += "- !birthday : sert à informer le bot de ta date d'anniversaire pour qu'il te le souhaites\n"
+        help_message += "- !event : sert à organiser des soirées\n"
+        help_message += "- !invite : sert à inviter des membres du serveur à l'une de test soirées\n"
+        help_message += "- !uninvite : sert à annuler une invitation à une soirée\n"
+        if author.get_role(ROLES_IDS["admin"]) is not None :
+            help_message += "- logs : afficher les logs du bot\n"
+            help_message += "- maintenance : entrer ou sortir du mode maintenance du serveur\n"
+            help_message += "- kill : éteindre le bot\n"
+        help_message += "\nSi tu veux plus de détails sur l'utilisation d'une commande, utilise \"!help __commande__\""
+        await bot.send(ctx.channel, help_message)
 
 @bot.command(name="kill")
 @bot.admin_command

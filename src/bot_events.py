@@ -3,6 +3,8 @@ from bot_clock import *
 @bot.event
 async def on_ready():
 
+    print("\n".join([c.name for c in bot.commands]))
+
     bot.guild = bot.get_guild(BOT_GUILD_ID)
     bot.owner = bot.guild.get_member(BOT_OWNER_ID)
     bot.categories = {category: discord.utils.get(bot.guild.categories, id=CATEGORY_IDS[category]) for category in CATEGORY_IDS}

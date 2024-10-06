@@ -155,10 +155,15 @@ Si tu ne veux pas que j'annonce ton anniversaire, envoie-moi 0.
     }
 }
 
-HELP = """
-"""
-
 HELP_MESSAGES = {
+
+    "birthday": """Cette commande sert à m'informer de ta date d'anniversaire afin que je puisse te le souhaiter le jour venu dans un salon dédié\
+(et par la même occasion informer les autres membres du serveur de cet événement). Elle s'utilise de la façon suivante :
+
+!birthday
+
+Quand tu utilises cette commande, je te pose une question en t'expliquant dans quel format me répondre.
+""",
 
 ####################################################################################################################################################################
 

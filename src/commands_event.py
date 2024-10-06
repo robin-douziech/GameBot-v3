@@ -102,10 +102,10 @@ async def invite_gamebot(ctx: commands.Context, *args, **kwargs) :
                                    + bot.vars["events"][event_idstr]["waiting_guests"]
                                    + bot.vars["events"][event_idstr]["present_guests"]) :
                         try :
-                            await bot.invite_member(event_idstr, bot.get_discord_member(pseudo))
-                            await bot.send(ctx.channel, f"Invitation à la soirée '{bot.vars['events'][event_idstr]['name']}' envoyée à {bot.get_discord_member(pseudo).display_name}")
+                            await bot.invite_member(event_idstr, member)
+                            await bot.send(ctx.channel, f"Invitation à la soirée '{bot.vars['events'][event_idstr]['name']}' envoyée à {member.display_name}")
                         except Exception as e :
-                            await bot.send(ctx.channel, f"Quelque chose s'est mal passé pendant l'invitation de {bot.get_discord_member(pseudo).display_name}")
+                            await bot.send(ctx.channel, f"Quelque chose s'est mal passé pendant l'invitation de {member.display_name}")
                     return
 
             for role in bot.guild.roles :
@@ -129,3 +129,53 @@ async def invite_gamebot(ctx: commands.Context, *args, **kwargs) :
 
     else :
         await bot.send(ctx.channel, f"Mauvaise utilisation de la commande. Utilise \"!help invite\" pour savoir comment utiliser cette commande")
+
+@bot.command(name="uninvite")
+@bot.private_command
+async def uninvite_gamebot(ctx: commands.Context, *args, **kwargs) :
+
+    author = bot.guild.get_member(ctx.author.id)
+
+    if len(args) > 1 :
+        
+        event_idstr = f"{author.name}#{author.discriminator}:{args[0]}"
+
+        if event_idstr in bot.vars["events"] and bot.vars["events"][event_idstr]["created"] :
+
+            for pseudo in bot.vars["members"] :
+                member = bot.get_discord_member(pseudo)
+                if (args[1] == member.mention
+                    or (re.match(r"^(\d+)$", args[1]) and int(args[1]) == member.id)
+                    or (args[1] == member.display_name and len([m.display_name for m in bot.guild.members if m.display_name == args[1]]) == 1)) :
+                    if (pseudo in bot.vars["events"][event_idstr]["invited_guests"]
+                                + bot.vars["events"][event_idstr]["waiting_guests"]
+                                + bot.vars["events"][event_idstr]["present_guests"]) :
+                        try :
+                            await bot.uninvite_member(event_idstr, member)
+                            await bot.send(ctx.channel, f"Invitation à la soirée '{bot.vars['events'][event_idstr]['name']}' annulée pour {member.display_name}")
+                        except Exception as e :
+                            await bot.send(ctx.channel, f"Quelque chose s'est mal passé pendant l'annulation de l'invitation de {member.display_name}")
+                    return
+
+            for role in bot.guild.roles :
+                if args[1] == role.mention :
+                    for member in [m for m in role.members if not(m.bot)] :
+                        pseudo = f"{member.name}#{member.discriminator}"
+                        if (pseudo in bot.vars["events"][event_idstr]["invited_guests"]
+                                    + bot.vars["events"][event_idstr]["waiting_guests"]
+                                    + bot.vars["events"][event_idstr]["waiting_guests"]) :
+                            try :
+                                await bot.uninvite_member(event_idstr, member)
+                                await bot.send(ctx.channel, f"Invitation à la soirée '{bot.vars['events'][event_idstr]['name']}' annulée pour {member.display_name}")
+                            except Exception as e :
+                                await bot.send(ctx.channel, f"Quelque chose s'est mal passé pendant l'annulation de l'invitation de {member.display_name}")
+                    return
+                
+            await bot.send(ctx.channel, f"Mauvaise utilisation de la commande. Utilise \"!help uninvite\" pour savoir comment utiliser cette commande")
+
+        else :
+            await bot.send(ctx.channel, f"Aucune de tes soirées ne possède l'identifiant \"{args[0]}\"")
+
+    else :
+        await bot.send(ctx.channel, f"Mauvaise utilisation de la commande. Utilise \"!help uninvite\" pour savoir comment utiliser cette commande")
+
