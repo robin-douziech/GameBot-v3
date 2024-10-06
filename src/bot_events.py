@@ -61,11 +61,26 @@ async def on_ready():
          if not(member in guild_members) :
             members_to_remove.append(member)
     await bot.add_members(members_to_add)
-    bot.remove_members(members_to_remove)
+    await bot.remove_members(members_to_remove)
 
     bot.config["maintenance_roles_backup"] = {x: bot.config["maintenance_roles_backup"][x] if x in bot.config["maintenance_roles_backup"] else [] for x in bot.vars["members"]}
     bot.config["rules_roles_backup"] = {x: bot.config["rules_roles_backup"][x] if x in bot.config["rules_roles_backup"] else [] for x in bot.vars["members"]}
     bot.write_config()
+
+    # salon pour utiliser le bot
+    for channel in bot.categories["bot"].channels :
+        pseudo = channel.topic
+        if pseudo in bot.vars["members"] :
+            bot.channels[f"bot_{pseudo}"] = channel
+        else :
+            await channel.delete()
+    for member in [m for m in bot.guild.members if not(m.bot) and not(f"bot_{m.name}#{m.discriminator}" in bot.channels)] :
+        channel = await bot.guild.create_text_channel("utiliser-gamebot-ici", category=bot.categories["bot"])
+        await channel.set_permissions(member, read_messages=True, send_messages=True, create_instant_invite=False)
+        await channel.edit(topic=f"{member.name}#{member.discriminator}")
+        for _member in [m for m in bot.guild.members if not(m.bot) and m != member] :
+            await channel.set_permissions(_member, read_messages=False, send_messages=False, create_instant_invite=False)
+        bot.channels[f"bot_{member.name}#{member.discriminator}"] = channel
 
     # MESSAGES PERMANENTS
     #
@@ -166,13 +181,11 @@ async def on_ready():
 @bot.event
 async def on_message(message: discord.Message) :
     author = bot.guild.get_member(message.author.id)
-    if not(author.bot) and message.channel == author.dm_channel :
-        bot.log(f"DM message from {author.name}#{author.discriminator} : {message.content}")
     if message.content.startswith(bot.command_prefix) :
         if message.content[1:].split(' ')[0] in [c.name for c in bot.commands] :
             await bot.process_commands(message)
         else :
-            await bot.send(author.dm_channel, "Je ne connais pas cette commande")
+            await bot.send(bot.channels[f"bot_{author.name}#{author.discriminator}"], "Je ne connais pas cette commande")
     else :
         await bot.process_msg(message)
 
@@ -186,7 +199,7 @@ async def on_member_join(member: discord.Member) :
 async def on_member_remove(member: discord.Member) :
     pseudo = f"{member.name}#{member.discriminator}"
     if pseudo in bot.vars["members"] and not(member in bot.guild.members) :
-        bot.remove_members([member])
+        await bot.remove_members([member])
 
 @bot.event
 async def on_raw_reaction_add(payload: discord.RawReactionActionEvent) :
@@ -236,7 +249,10 @@ async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent) :
         # annulation de la participation à une soirée
         for event_idstr in bot.vars["events"] :
             if channel == bot.channels[f"invitations_{event_idstr}"] :
-                if f"{author.name}#{author.discriminator}" in bot.vars["events"][event_idstr]["waiting_guests"] + bot.vars["events"][event_idstr]["present_guests"] and payload.emoji.name == chr(0x1F44D) :
+                if (f"{author.name}#{author.discriminator}" != event_idstr.split(':')[0]
+                    and payload.emoji.name == chr(0x1F44D)
+                    and f"{author.name}#{author.discriminator}" in bot.vars["events"][event_idstr]["waiting_guests"]
+                                                                 + bot.vars["events"][event_idstr]["present_guests"]) :
                     await bot.cancel_participation(event_idstr, author)
                 return        
             

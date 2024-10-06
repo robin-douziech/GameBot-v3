@@ -51,10 +51,25 @@ class GameBot(commands.Bot) :
 
     async def add_members(self, pseudos: list[str]) :
         for pseudo in pseudos :
+
             discord_member = self.get_discord_member(pseudo)
+
+            # on lui ajoute le rôle "base"
             await discord_member.add_roles(self.roles["base"])
+
+            # si la fonctionnalité "règles" n'est pas utilisée on lui ajoute le rôle "7tadellien(ne)"
             if self.channels["rules"] is None :
                 await discord_member.add_roles(self.roles["7tadellien(ne)"])
+
+            # on lui crée son salon de discussion avec le bot
+            channel = await self.guild.create_text_channel("utiliser-gamebot-ici", category=self.categories["bot"])
+            await channel.edit(topic=pseudo)
+            await channel.set_permissions(discord_member, read_messages=True, send_messages=True, create_instant_invite=False)
+            for member in [m for m in self.guild.members if not(m.bot) and m != discord_member] :
+                await channel.set_permissions(member, read_messages=False, send_messages=False, create_instant_invite=False)
+            self.channels[f"bot_{pseudo}"] = channel
+
+            # on l'enregistre dans bot.vars["members"]
             self.vars["members"][pseudo] = BOT_VARS_DEFAULTS["members"]
             self.write_json("members")
 
@@ -184,19 +199,6 @@ class GameBot(commands.Bot) :
                 current_msg += f"{lines.pop(0)}\n"
             msg_list.append(f"{wrappers[0]}{current_msg}{wrappers[1]}")
         return msg_list
-
-    def dm_command(self, function: callable) :
-        """ Decorator to apply to a command so it can only be sent by direct message """
-        async def wrapper(ctx: commands.Context, *args, **kwargs):
-            author = self.guild.get_member(ctx.author.id)
-            dm_channel = author.dm_channel if author.dm_channel is not None else await author.create_dm()
-            if ctx.channel == dm_channel :
-                await function(ctx, *args, **kwargs)
-            else :
-                message = await ctx.channel.fetch_message(ctx.message.id)
-                await ctx.channel.delete_messages([message])
-                await dm_channel.send("Pour éviter de polluer les salons du serveur, je ne réponds qu'aux commandes envoyées par message privé")
-        return wrapper
     
     async def get_all_messages_in_channel(self, channel: discord.TextChannel|str):
         """ This function returns a list containing all the messages of a channel """
@@ -272,14 +274,8 @@ class GameBot(commands.Bot) :
             # on lui donne accès au salon d'invitation
             await self.channels[f"invitations_{event_idstr}"].set_permissions(member, **EVENT_CHANNEL_PERMISSIONS["invitations"])
 
-            host = ""
-            if len(self.vars["events"][event_idstr]["host"]) > 0 :
-                host = f"{self.vars['events'][event_idstr]['host']} ({discord_host.mention})"
-            else :
-                host = f"{discord_host.mention}"
-
             # on lui envoie un message et on log cette invitation
-            await self.send(member.dm_channel, f"Tu as été invité(e) à une soirée par {host}. Tu peux accepter cette invitation dans le salon {self.channels[f'invitations_{event_idstr}'].mention}.")
+            await self.send(member.dm_channel, f"Tu as été invité(e) à une soirée par {self.vars['events'][event_idstr]['host']}. Tu peux accepter cette invitation dans le salon {self.channels[f'invitations_{event_idstr}'].mention}.")
             await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : pas invité(e) --> invité(e)")
 
         else :
@@ -304,6 +300,25 @@ class GameBot(commands.Bot) :
                 logging.critical(message)
             case _ :
                 raise Exception("Unknown logging level")
+            
+    def private_command(self, function: callable) :
+        """ Decorator to apply to a command so it can only be sent in the dedicated private channel """
+        async def wrapper(ctx: commands.Context, *args, **kwargs):
+            author = self.guild.get_member(ctx.author.id)
+            if not(f"bot_{author.name}#{author.discriminator}" in self.channels) :
+                channel = await self.guild.create_text_channel("utiliser-gamebot-ici", category=self.categories["bot"])
+                await channel.edit(topic=f"{author.name}#{author.discriminator}")
+                await channel.set_permissions(author, read_messages=True, send_messages=True, create_instant_invite=False)
+                for member in [m for m in self.guild.members if not(m.bot) and m != author] :
+                    await channel.set_permissions(member, read_messages=False, send_messages=False, create_instant_invite=False)
+                self.channels[f"bot_{author.name}#{author.discriminator}"] = channel
+            if ctx.channel == self.channels[f"bot_{author.name}#{author.discriminator}"] :
+                await function(ctx, *args, **kwargs)
+            else :
+                message = await ctx.channel.fetch_message(ctx.message.id)
+                await ctx.channel.delete_messages([message])
+                await self.channels[f"bot_{author.name}#{author.discriminator}"].send("Je n'exécute que les commandes qui me sont envoyées ici")
+        return wrapper
             
     async def process_msg(self, message: discord.Message) :
         author = self.guild.get_member(message.author.id)
@@ -343,11 +358,11 @@ class GameBot(commands.Bot) :
                                 self.birthday_datetimes.append(birthday)
                             self.write_json("members")
 
-                            await self.send(author.dm_channel, response)
+                            await self.send(self.channels[f"bot_{author.name}#{author.discriminator}"], response)
                             await self.send_next_question(author)
 
                         else :
-                            await self.send(author.dm_channel, "Ta réponse ne respecte pas le format attendu")
+                            await self.send(self.channels[f"bot_{author.name}#{author.discriminator}"], "Ta réponse ne respecte pas le format attendu")
 
                     case 'event' :
                         if self.answer_is_valid(author, message.content) :
@@ -362,7 +377,9 @@ class GameBot(commands.Bot) :
 
                                 # changer le format de host
                                 if self.vars["events"][event_idstr]["host"] == '.' :
-                                    self.vars["events"][event_idstr]["host"] = ""
+                                    self.vars["events"][event_idstr]["host"] = f"{author.mention}"
+                                else :
+                                    self.vars["events"][event_idstr]["host"] = f"{self.vars['events'][event_idstr]['host']} ({author.mention})"
 
                                 # renommer les salons
                                 for string in ["invitations", "soirées", "logs"] :
@@ -370,8 +387,7 @@ class GameBot(commands.Bot) :
 
                                 # envoyer le message d'invitation
                                 await self.send(self.channels[f"invitations_{event_idstr}"], MESSAGES["invitation"].format(
-                                    host = f"({self.vars['events'][event_idstr]['host']})" if len(self.vars['events'][event_idstr]['host']) > 0 else '',
-                                    host_mention = author.mention,
+                                    host = f"({self.vars['events'][event_idstr]['host']})",
                                     lieu = self.vars['events'][event_idstr]['place'],
                                     date = self.vars['events'][event_idstr]['datetime'].split()[0],
                                     heure = self.vars['events'][event_idstr]['datetime'].split()[1],
@@ -386,9 +402,14 @@ class GameBot(commands.Bot) :
                     case _ :
                         pass
 
-    def remove_members(self, pseudos: list[str]) :
+    async def remove_members(self, pseudos: list[str]) :
         try :
             for pseudo in pseudos :
+
+                if f"bot_{pseudo}" in self.channels :
+                    await self.channels[f"bot_{pseudo}"].delete()
+                    self.channels.pop(f"bot_{pseudo}")
+
                 self.vars["members"].pop(pseudo)
                 self.write_json("members")
         except Exception as e :
@@ -475,7 +496,7 @@ class GameBot(commands.Bot) :
             if len(self.vars["members"][f"{author.name}#{author.discriminator}"]["questions"]) > 0 :
                 question_type = self.vars["members"][f"{author.name}#{author.discriminator}"]["questionned"]
                 question = self.vars["members"][f"{author.name}#{author.discriminator}"]["questions"][0]
-                await self.send(author.dm_channel, CREATION_QUESTIONS[question_type][question]["text"])
+                await self.send(self.channels[f"bot_{author.name}#{author.discriminator}"], CREATION_QUESTIONS[question_type][question]["text"])
             else :
                 self.vars["members"][f"{author.name}#{author.discriminator}"]["questionned"] = ""
                 self.vars["members"][f"{author.name}#{author.discriminator}"]["object_id"] = 0

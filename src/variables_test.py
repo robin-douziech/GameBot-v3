@@ -5,7 +5,8 @@ CATEGORY_IDS = {
     "invitations": 1288199433925689354,
     "soirées": 1288199479677419642,
     "logs": 1288199503022915685,
-    "administration": 1288199568315514941
+    "administration": 1288199568315514941,
+    "bot": 1292429126585811015
 }
 
 CHANNEL_IDS = {

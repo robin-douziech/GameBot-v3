@@ -1,7 +1,7 @@
 from commands_event import *
 
 @bot.command(name="birthday")
-@bot.dm_command
+@bot.private_command
 async def birthday_gamebot(ctx: commands.Context, *args, **kwargs) :
     author = bot.guild.get_member(ctx.author.id)
     if len(bot.vars["members"][f"{author.name}#{author.discriminator}"]["questions"]) == 0 :
@@ -11,18 +11,18 @@ async def birthday_gamebot(ctx: commands.Context, *args, **kwargs) :
         bot.write_json("members")
         await bot.send_next_question(author)
     else:
-        await bot.send(author.dm_channel, "Tu as déjà une autre commande en cours")
+        await bot.send(bot.channels[f"bot_{author.name}#{author.discriminator}"], "Tu as déjà une autre commande en cours")
 
 @bot.command(name="kill")
 @bot.admin_command
-@bot.dm_command
+@bot.private_command
 async def kill_gamebot(ctx: commands.Context, *args, **kwargs) :
     bot.log("Bot killed by the !kill command", 'warning')
     sys.exit(0)
 
 @bot.command(name="logs")
 @bot.admin_command
-@bot.dm_command
+@bot.private_command
 async def logs_gamebot(ctx: commands.Context, nb_lines: int = 10, *args, **kwargs) :
     author = bot.guild.get_member(ctx.author.id)
     (day, month, year) = bot.get_current_datetime()[:3]
@@ -32,13 +32,13 @@ async def logs_gamebot(ctx: commands.Context, nb_lines: int = 10, *args, **kwarg
             if len(msg) > nb_lines :
                 msg = msg[-int(nb_lines):]
             txt = "\n".join(msg) + "\n"
-            await bot.send(author.dm_channel, txt, wrappers=('```', '```'))
+            await bot.send(bot.channels[f"bot_{author.name}#{author.discriminator}"], txt, wrappers=('```', '```'))
     except Exception as e :
         bot.log(f"An exception occured while reading logs: {e}", 'error')
 
 @bot.command(name="maintenance")
 @bot.admin_command
-@bot.dm_command
+@bot.private_command
 async def maintenance_gamebot(ctx: commands.Context, *args, **kwargs) :
     if len(args) > 0 :
 

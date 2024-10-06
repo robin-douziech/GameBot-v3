@@ -86,7 +86,7 @@ J'espère que cela ne durera pas trop longtemps, veuillez nous excuser pour la g
     "anniversaires": """C'est l'anniversaire de {member_mention} aujourd'hui ! {age}""",
     "invitation": """Hello @here !
 
-Vous avez été invité à une soirée par {host_mention} {host}
+Vous avez été invité à une soirée par {host}
 
 Voici quelques informations sur cette soirée :
 Lieu : {lieu}
@@ -195,5 +195,14 @@ Si tu renseignes l'identifiant de la soirée, je te donnerai toutes les informat
 """,
 
 
-    "invite": """"""
+    "invite": """Cette commande sert à inviter un membre ou un rôle du serveur à une soirée que tu as créée. Elle s'utilise de la façon suivante :
+
+!invite __event_id__ __pseudo__
+
+ou
+
+!invite __event_id__ @__rôle__
+
+
+"""
 }
