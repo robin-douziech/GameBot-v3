@@ -524,6 +524,57 @@ class GameBot(commands.Bot) :
 
             await self.send(self.channels["logs-gamebot"], f"Je n'ai pas réussi à désinviter {member.display_name} d'une soirée")
             raise Exception(f"Cannot uninvite '{member.display_name}' from the event")
+        
+    async def update_permissions_on_event_channels(self, member: discord.Member|None = None) :
+
+        members_can_see_channels = self.config["maintenance"] == "down"
+
+        if member is None : # on anctualise les permissions des salons pour tous les membres du serveur
+
+            for event_idstr in self.vars["events"] :
+
+                # on ajuste les permissions du salon de logs
+                host = self.get_discord_member(event_idstr.split(':')[0])
+                host_can_see_channels = members_can_see_channels and (self.channels["rules"] is None or host in self.members_having_accepted_rules)
+                await self.channels[f"logs_{event_idstr}"].set_permissions(host, read_messages=host_can_see_channels, send_messages=False, create_instant_invite=False)
+
+                # pour chaque invité ...
+                for pseudo in self.vars["events"][event_idstr]["invited_guests"] \
+                            + self.vars["events"][event_idstr]["waiting_guests"] \
+                            + self.vars["events"][event_idstr]["present_guests"] :
+                    
+                    member = self.get_discord_member(pseudo)
+                    can_see_channels = members_can_see_channels and (self.channels["rules"] is None or member in self.members_having_accepted_rules)
+
+                    # on ajuste les permissions du salon d'invitation
+                    await self.channels[f"invitations_{event_idstr}"].set_permissions(member, read_messages=can_see_channels, send_messages=False, create_instant_invite=False)
+                    
+                    # on ajuste les permissions du salon de la soirée
+                    if pseudo in self.vars["events"][event_idstr]["present_guests"] :
+                        await self.channels[f"soirées_{event_idstr}"].set_permissions(member, read_messages=can_see_channels, send_messages=can_see_channels, create_instant_invite=False)
+
+        else : # on anctualise les permissions des salons pour le membre renseigné
+
+            pseudo = f"{member.name}#{member.discriminator}"
+            can_see_channels = members_can_see_channels and (self.channels["rules"] is None or member in self.members_having_accepted_rules)
+
+            for event_idstr in self.vars["events"] :
+
+                # si le membre est l'hôte de la soirée
+                if event_idstr.split(':')[0] == pseudo :
+                    await self.channels[f"logs_{event_idstr}"].set_permissions(member, read_messages=can_see_channels, send_messages=False, create_instant_invite=False)
+
+                # si le membre est invité
+                if pseudo in self.vars["events"][event_idstr]["invited_guests"] \
+                           + self.vars["events"][event_idstr]["waiting_guests"] \
+                           + self.vars["events"][event_idstr]["present_guests"] :
+
+                    await self.channels[f"invitations_{event_idstr}"].set_permissions(member, read_messages=can_see_channels, send_messages=False, create_instant_invite=False)
+                    
+                    # si le membre est présent à la soirée
+                    if pseudo in self.vars["events"][event_idstr]["present_guests"] :
+                        await self.channels[f"soirées_{event_idstr}"].set_permissions(member, read_messages=can_see_channels, send_messages=can_see_channels, create_instant_invite=False)
+
 
     async def update_waiting_list(self, event_idstr: str) :
 

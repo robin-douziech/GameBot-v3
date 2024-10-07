@@ -70,6 +70,7 @@ async def maintenance_gamebot(ctx: commands.Context, *args, **kwargs) :
 
             for member in [m for m in bot.guild.members if not(m.bot)] :
 
+                # on retire les permissions sur son salon privé avec le bot
                 await bot.channels[f"bot_{member.name}#{member.discriminator}"].set_permissions(member, read_messages=False, send_messages=False, create_instant_invite=False)
 
                 # on garde une trace des roles du membre et on les retire
@@ -79,7 +80,11 @@ async def maintenance_gamebot(ctx: commands.Context, *args, **kwargs) :
                 await member.remove_roles(bot.roles["base"])
                 await member.add_roles(bot.roles["maintenance"])
 
+            # on supprime les permissions sur les salon des soirées
+            await bot.update_permissions_on_event_channels()
+
             bot.write_config()
+            await bot.send(ctx.channel, ":information: Le serveur est entré en maintenance")
 
         elif args[0] == "down" and bot.config["maintenance"] == "up" :
 
@@ -87,10 +92,14 @@ async def maintenance_gamebot(ctx: commands.Context, *args, **kwargs) :
 
             for member in [m for m in bot.guild.members if not(m.bot)] :
 
+                # on rend les permissions sur son salon privé avec le bot
                 await bot.channels[f"bot_{member.name}#{member.discriminator}"].set_permissions(member, read_messages=True, send_messages=True, create_instant_invite=False)
 
                 await member.remove_roles(bot.roles["maintenance"])
                 await member.add_roles(bot.roles["base"])
+
+            # on rend les permissions sur les salon des soirées
+            await bot.update_permissions_on_event_channels()
 
             # si la fonctionnalité "règles" est utilisée, on ajoute le rôle "7tadellien(ne)" uniquement aux membres ayant accepté les règles
             if bot.channels["rules"] is not None :
@@ -120,4 +129,5 @@ async def maintenance_gamebot(ctx: commands.Context, *args, **kwargs) :
                 bot.write_config()
 
             bot.write_config()
+            await bot.send(ctx.channel, ":information: Le serveur est sorti de maintenance")
 

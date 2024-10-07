@@ -3,8 +3,6 @@ from bot_clock import *
 @bot.event
 async def on_ready():
 
-    print("\n".join([c.name for c in bot.commands]))
-
     bot.guild = bot.get_guild(BOT_GUILD_ID)
     bot.owner = bot.guild.get_member(BOT_OWNER_ID)
     bot.categories = {category: discord.utils.get(bot.guild.categories, id=CATEGORY_IDS[category]) for category in CATEGORY_IDS}
@@ -101,6 +99,7 @@ async def on_ready():
         bot.save_message("maintenance", [message.id for message in messages])
 
     # Gestion des rôles
+    await bot.update_permissions_on_event_channels()
     if bot.config["maintenance"] == "down" :
 
         # On actualise les membres du rôle "7tadellien(ne)" en fonction de qui a accepté les règles
@@ -177,7 +176,7 @@ async def on_ready():
 
 @bot.event
 async def on_message(message: discord.Message) :
-    author = message.author
+    author = bot.guild.get_member(message.author.id)
     if not(author.bot) and (bot.config["maintenance"] == "down" or author.get_role(ROLES_IDS["admin"]) is not None) :
         if message.content.startswith(bot.command_prefix) :
             if message.content[1:].split(' ')[0] in [c.name for c in bot.commands] :
@@ -210,6 +209,8 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent) :
         # réaction au message des règles du serveur
         if "rules" in bot.messages and len(bot.messages["rules"]) > 0 and message.id == bot.messages["rules"][-1] :
             if payload.emoji.name == chr(0x1F4DD) :
+                bot.members_having_accepted_rules.append(author)
+                await bot.update_permissions_on_event_channels(member=author)
                 await bot.channels[f"bot_{author.name}#{author.discriminator}"].set_permissions(author, read_messages=True, send_messages=True, create_instant_invite=False)
                 await author.add_roles(bot.roles["7tadellien(ne)"])
                 for role_id in bot.config["rules_roles_backup"][f"{author.name}#{author.discriminator}"] :
@@ -240,6 +241,8 @@ async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent) :
 
         # réaction au message des règles du serveur
         if "rules" in bot.messages and len(bot.messages["rules"]) > 0 and message.id == bot.messages["rules"][-1] and payload.emoji.name == chr(0x1F4DD) :
+            bot.members_having_accepted_rules.remove(author)
+            await bot.update_permissions_on_event_channels(member=author)
             await bot.channels[f"bot_{author.name}#{author.discriminator}"].set_permissions(author, read_messages=False, send_messages=False, create_instant_invite=False)
             await author.remove_roles(bot.roles["7tadellien(ne)"])
             bot.config["rules_roles_backup"][f"{author.name}#{author.discriminator}"] = await backup_roles(author, remove=True)
@@ -275,7 +278,7 @@ async def on_member_update(before: discord.Member, after: discord.Member) :
         for role in [r for r in after.roles if not(r in before.roles)] :
 
             # si le serveur est en maintenance, on ajoute l'id du rôle à la backup et on supprime le rôle
-            if bot.config["maintenance"] == "up" :
+            if bot.config["maintenance"] == "up" and not(role in roles_to_ignore) :
                 if not(role.id in bot.config["maintenance_roles_backup"][f"{after.name}#{after.discriminator}"]) :
                     bot.config["maintenance_roles_backup"][f"{after.name}#{after.discriminator}"].append(role.id)
                     bot.write_config()
