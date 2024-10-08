@@ -280,8 +280,6 @@ class GameBot(commands.Bot) :
             # on lui donne accès au salon d'invitation
             await self.channels[f"invitations_{event_idstr}"].set_permissions(member, **EVENT_CHANNEL_PERMISSIONS["invitations"])
 
-            # on lui envoie un message et on log cette invitation
-            await self.send(member.dm_channel, f"Tu as été invité(e) à une soirée par {self.vars['events'][event_idstr]['host']}. Tu peux accepter cette invitation dans le salon {self.channels[f'invitations_{event_idstr}'].mention}.")
             await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : pas invité(e) --> invité(e)")
 
         else :
