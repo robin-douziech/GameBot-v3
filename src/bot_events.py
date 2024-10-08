@@ -67,12 +67,6 @@ async def on_ready():
     bot.config["rules_roles_backup"] = {x: bot.config["rules_roles_backup"][x] if x in bot.config["rules_roles_backup"] else [] for x in bot.vars["members"]}
     bot.write_config()
 
-    # salon pour utiliser le bot
-    for channel in bot.categories["bot"].channels :
-        await channel.delete()
-    for member in [m for m in bot.guild.members if not(m.bot)] :
-        await bot.create_command_channel_for_member(member)
-
     # MESSAGES PERMANENTS
     #
     # Message de bienvenue dans le salon #informations
@@ -98,6 +92,10 @@ async def on_ready():
         messages = await bot.send(bot.channels["maintenance"], MESSAGES["maintenance"].format(owner_mention=bot.owner.mention))
         bot.save_message("maintenance", [message.id for message in messages])
 
+    # salon pour utiliser le bot
+    for channel in bot.categories["bot"].channels :
+        await channel.delete()
+    
     # Gestion des rôles
     await bot.update_permissions_on_event_channels()
     if bot.config["maintenance"] == "down" :
@@ -116,6 +114,7 @@ async def on_ready():
                 # si le membre a accepté les règles
                 if member in bot.members_having_accepted_rules :
 
+                    await bot.create_command_channel_for_member(member)
                     await bot.channels[f"bot_{member.name}#{member.discriminator}"].set_permissions(member, read_messages=True, send_messages=True, create_instant_invite=False)
 
                     for role_id in bot.config["rules_roles_backup"][f"{member.name}#{member.discriminator}"] :
@@ -130,6 +129,7 @@ async def on_ready():
                 # si le membre n'a pas accepté les règles
                 else :
 
+                    await bot.create_command_channel_for_member(member)
                     await bot.channels[f"bot_{member.name}#{member.discriminator}"].set_permissions(member, read_messages=False, send_messages=False, create_instant_invite=False)
 
                     bot.config["rules_roles_backup"][f"{member.name}#{member.discriminator}"] = await backup_roles(member, remove=True)
@@ -143,6 +143,7 @@ async def on_ready():
 
             for member in [m for m in bot.guild.members if not(m.bot)] :
 
+                await bot.create_command_channel_for_member(member)
                 await bot.channels[f"bot_{member.name}#{member.discriminator}"].set_permissions(member, read_messages=True, send_messages=True, create_instant_invite=False)
 
                 if member.get_role(ROLES_IDS["base"]) is None :
@@ -154,7 +155,10 @@ async def on_ready():
     else :
 
         for member in [m for m in bot.guild.members if not(m.bot)] :
+
+            await bot.create_command_channel_for_member(member)
             await bot.channels[f"bot_{member.name}#{member.discriminator}"].set_permissions(member, read_messages=False, send_messages=False, create_instant_invite=False)
+            
             bot.config["maintenance_roles_backup"][f"{member.name}#{member.discriminator}"].extend(await backup_roles(member, remove=True))
             bot.write_config()
             if member.get_role(ROLES_IDS["7tadellien(ne)"]) is not None :

@@ -387,12 +387,12 @@ class GameBot(commands.Bot) :
 
                                 # envoyer le message d'invitation
                                 await self.send(self.channels[f"invitations_{event_idstr}"], MESSAGES["invitation"].format(
-                                    host = f"({self.vars['events'][event_idstr]['host']})",
+                                    host = self.vars['events'][event_idstr]['host'],
                                     lieu = self.vars['events'][event_idstr]['place'],
                                     date = self.vars['events'][event_idstr]['datetime'].split()[0],
                                     heure = self.vars['events'][event_idstr]['datetime'].split()[1],
                                     description = self.vars['events'][event_idstr]['description'],
-                                    NB = 'NB: '
+                                    NB = f"\nIl y a un total de {self.vars['events'][event_idstr]['nb_max_guests']} places disponibles (hôte compris). Si plus de personnes souhaitent participer, je m'occuperai de gérer la liste d'attente" if int(self.vars['events'][event_idstr]['nb_max_guests']) > 0 else ''
                                 ), emojis=[chr(0x1F44D)])
 
                                 self.vars["events"][event_idstr]["created"] = True
@@ -423,9 +423,8 @@ class GameBot(commands.Bot) :
             self.vars["events"][event_idstr]["invited_guests"].remove(f"{member.name}#{member.discriminator}")
             self.write_json("events")
 
-            self.channels[f"invitations_{event_idstr}"].set_permissions(member, read_messages=False)
+            await self.channels[f"invitations_{event_idstr}"].set_permissions(member, read_messages=False)
 
-            await self.send(member.dm_channel, f"Tu as été retiré(e) des personnes invitées à la soirée '{self.vars['events'][event_idstr]['name']}'.")
             await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : invité --> pas invité")
 
         else :
@@ -441,8 +440,8 @@ class GameBot(commands.Bot) :
             self.vars["events"][event_idstr]["present_guests"].remove(f"{member.name}#{member.discriminator}")
             self.write_json("events")
 
-            self.channels[f"invitations_{event_idstr}"].set_permissions(member, read_messages=False)
-            self.channels[f"soirées_{event_idstr}"].set_permissions(member, read_messages=False)
+            await self.channels[f"invitations_{event_idstr}"].set_permissions(member, read_messages=False)
+            await self.channels[f"soirées_{event_idstr}"].set_permissions(member, read_messages=False)
 
             await self.send(member.dm_channel, f"Tu as été retiré(e) des personnes invitées à la soirée '{self.vars['events'][event_idstr]['name']}'.")
             await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : présent --> pas invité")
@@ -462,7 +461,7 @@ class GameBot(commands.Bot) :
             self.vars["events"][event_idstr]["waiting_guests"].remove(f"{member.name}#{member.discriminator}")
             self.write_json("events")
 
-            self.channels[f"invitations_{event_idstr}"].set_permissions(member, read_messages=False)
+            await self.channels[f"invitations_{event_idstr}"].set_permissions(member, read_messages=False)
 
             await self.send(member.dm_channel, f"Tu as été retiré(e) des personnes invitées à la soirée '{self.vars['events'][event_idstr]['name']}'.")
             await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : liste d'attente --> pas invité")
@@ -588,10 +587,7 @@ class GameBot(commands.Bot) :
                 if len(self.vars["events"][event_idstr]["present_guests"]) < int(self.vars["events"][event_idstr]["nb_max_guests"]) :
 
                     for pseudo in self.vars["events"][event_idstr]["waiting_guests"][:(int(self.vars["events"][event_idstr]["nb_max_guests"]) - len(self.vars["events"][event_idstr]["present_guests"]))] :
-                        await self.add_member_to_present_guests(event_idstr, self.get_discord_member(pseudo))
-
-                else :
-                    raise Exception(f"Cannot update waiting list for event with id '{event_idstr}' : no place left in present_guests")                
+                        await self.add_member_to_present_guests(event_idstr, self.get_discord_member(pseudo))              
 
         else :
 

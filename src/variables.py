@@ -27,7 +27,7 @@ BOT_VARS_DEFAULTS = {
         "place": "",
         "datetime": "",
         "description": "",
-        "nb_max_guests": 0,
+        "nb_max_guests": "",
 
         "invited_guests": [],
         "waiting_guests": [],
@@ -95,7 +95,6 @@ Heure : {heure}
 Description : {description}
 
 Réagis avec :+1: si tu souhaites participer à cette soirée
-
 {NB}
 """
 }
