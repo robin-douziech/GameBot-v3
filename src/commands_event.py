@@ -11,8 +11,6 @@ async def event_gamebot(ctx: commands.Context, *args, **kwargs) :
         match args[0] :
 
             case 'create' :
-
-                await bot.send(ctx.channel, "J'arrive dans quelques secondes ...")
                 
                 if not(bot.vars["members"][f"{author.name}#{author.discriminator}"]["questionned"]) :
                     
@@ -31,10 +29,10 @@ async def event_gamebot(ctx: commands.Context, *args, **kwargs) :
 
                     # création des salons
                     for string in ["invitations", "soirées", "logs"] :
-                        channel = await bot.guild.create_text_channel(event_idstr, category=bot.categories[string])
-                        await channel.set_permissions(author, **EVENT_CHANNEL_PERMISSIONS[string])
-                        for member in [m for m in bot.guild.members if not(m.bot) and m != author] :
-                            await channel.set_permissions(member, read_messages=False)
+                        channel = await bot.guild.create_text_channel(event_idstr, category=bot.categories[string], overwrites={
+                            author: discord.PermissionOverwrite(**EVENT_CHANNEL_PERMISSIONS[string]),
+                            **{member: discord.PermissionOverwrite(read_messages=False, send_messages=False, create_instant_invite=False) for member in [m for m in bot.guild.members if not(m.bot) and m != author]}
+                        })
                         bot.channels[f"{string}_{event_idstr}"] = channel
                         bot.vars["events"][event_idstr][f"{string}_channel_id"] = channel.id
                     bot.write_json("events")
