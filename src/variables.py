@@ -211,7 +211,10 @@ Si tu renseignes l'identifiant de la soirée, je te donnerai toutes les informat
 
 !event delete __event_id__
 
-Si la soirée n'est pas encore passée, je préviendrai tous les membres du serveur invités que celle-ci est annulée.
+Si la soirée n'est pas encore passée, je préviendrai tous les membres du serveur invités que celle-ci est annulée. \
+Tu n'as pas besoin de désinviter tous les invités d'une soirée avant de la supprimer (et il est même préférable de ne pas le \
+faire car si tu les désinvite, il recevront "tu n'es plus invité" alors que si tu supprime la soirée sans les désinviter, ils \
+recevront "la soirée a été supprimée").
 """,
 
 ####################################################################################################################################################################
@@ -222,13 +225,46 @@ Si la soirée n'est pas encore passée, je préviendrai tous les membres du serv
 
 avec :
 - event_id: l'identifiant de la soirée à laquelle tu souhaites inviter quelqu'un (tu peux utiliser la commande "!event read" pour connaitre les identifiants de tes soirées)
-- guest: ce paramètre représente la personne ou le rôle que tu souhaites inviter. Il peut être :
-  - le pseudo d'un membre (celui que tu vois dans la liste des membres)
-  - l'identifiant d'un membre
-  - la mention d'un rôle (mentionner le rôle). Malheureusement, la mention ne fonctionne pas pour inviter un membre car on ne peut pas mentionner quelqu'un dans un salon auquel il n'a pas accès.
+- guest: ce paramètre représente la personne ou le rôle que tu souhaites inviter
+
+__Si tu invites un membre__ :
+
+Le paramètre guest peut être l'identifiant du membre ou son pseudo (celui que tu vois dans la liste des membres)
+
+__Si tu invites un rôle__ :
+
+Le paramètre guest doit être la mention du rôle (tu dois mentionner le rôle). Je te conseille donc d'utiliser cette commande \
+depuis ton salon avec le bot dans le serveur et non en messages privés pour pouvoir mentionner le rôle. Tous les membres \
+possédant ce rôle et n'étant pas encore invités seront invités.
 """,
 
 ####################################################################################################################################################################
 
-    "uninvite": """Cette commande sert à annuler l'invitation d'un membre ou un rôle à une soirée. Elle s'utilise exactement de la même manière que la commande "!invite" mais aura l'effet inverse."""
+    "uninvite": """Cette commande sert à annuler l'invitation d'un membre ou un rôle à une soirée. Elle s'utilise de la façon suivante :
+
+!uninvite __event_id__ __guest__
+
+avec :
+- event_id: l'identifiant de la soirée à laquelle tu souhaites désinviter quelqu'un (tu peux utiliser la commande "!event read" pour connaitre les identifiants de tes soirées)
+- guest: ce paramètre représente la personne ou le rôle que tu souhaites désinviter
+
+__Si tu désinvites un membre__ :
+
+Le paramètre guest peut être l'identifiant du membre ou son pseudo (celui que tu vois dans la liste des membres)
+
+__Si tu désinvites un rôle__ :
+
+Le paramètre guest doit être la mention du rôle (tu dois mentionner le rôle). Je te conseille donc d'utiliser cette commande \
+depuis ton salon avec le bot dans le serveur et non en messages privés pour pouvoir mentionner le rôle. Tous les membres \
+invités à la soirées et ayant été invité uniquement via ce rôle seront désinvités.
+
+Exemple :
+
+Tu désinvite le rôle @role1, Toto est invité à la soirée et possède le rôle role1.
+- si Toto possède un autre rôle qui est invité à la soirée, Toto est toujours invité
+- si tu as invité Toto explicitement avec la commande "!invite __event_id__ Toto", Toto est toujours invité
+- si tu n'as pas invité Toto explicitement et que Toto ne possède pas d'autre rôle encore invité à la soirée, Toto n'est plus invité
+
+
+"""
 }
