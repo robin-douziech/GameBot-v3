@@ -51,7 +51,15 @@ async def event_gamebot(ctx: commands.Context, *args, **kwargs) :
                 if len(args) > 1 :
                     if f"{author.name}#{author.discriminator}:{args[1]}" in bot.vars["events"] :
                         event_idstr = f"{author.name}#{author.discriminator}:{args[1]}"
-                        infos = '\n'.join([f"{var_name}: {bot.vars['events'][event_idstr][var_name]}" for var_name in bot.vars["events"][event_idstr] if var_name != "created" and not(var_name.endswith('channel_id'))])
+                        
+                        
+                        infos = '\n'.join([f"{var_name}: {bot.vars['events'][event_idstr][var_name]}" for var_name in bot.vars["events"][event_idstr]
+                                           if var_name != "created" and not(var_name.endswith('channel_id')) and not(isinstance(bot.vars['events'][event_idstr][var_name], list))])
+                        
+                        infos += f"\n\n__Membres invités n'ayant pas encore accepté l'invitation__ :\n- " + '\n- '.join(bot.vars['events'][event_idstr]['invited_guests']) + "\n\n"
+                        infos += f"__Membres invités dans la liste d'attente (car plus de place)__ :\n- " + '\n- '.join(bot.vars['events'][event_idstr]['waiting_guests']) + "\n\n"
+                        infos += f"__Membres présents à la soirée____ :\n- " + '\n- '.join(bot.vars['events'][event_idstr]['present_guests'])
+                        
                         await bot.send(ctx.channel, f"Voici toutes les informations de la soirée ayant l'identifiant \"{args[1]}\" :\n{infos}")
                     else :
                         await bot.send(ctx.channel, f"Aucune de tes soirées ne possède l'identifiant \"{args[1]}\"")
