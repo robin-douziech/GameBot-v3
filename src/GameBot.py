@@ -556,8 +556,11 @@ class GameBot(commands.Bot) :
         if (event_idstr in self.vars["events"] and self.vars["events"][event_idstr]["created"]
             and self.role_is_invited_to_event(event_idstr, role)) :
 
-            # membres ayant les droits en lecture sur le salon explicitement (pas uniquement via un rôle)
-            invited_members = [m for m in self.channels[f"invitations_{event_idstr}"].overwrites.keys() if isinstance(m, discord.Member) and self.channels[f"invitations_{event_idstr}"].overwrites[m].read_messages]
+            # membres ayant les droits en lecture sur le salon d'une autre manière que via ce rôle
+            # (c-a-d explicitement en tant que membre ou via un autre rôle)
+            invited_members = [m for m in self.channels[f"invitations_{event_idstr}"].overwrites
+                               if isinstance(m, discord.Member) and self.channels[f"invitations_{event_idstr}"].overwrites[m].read_messages] \
+                            + [m for r in self.channels[f"invitations_{event_idstr}"].overwrites if isinstance(r, discord.Role) and r != role for m in r.members]
             
             # on supprime les membres ayant la rôle et n'ayant pas été invité en personne
             msg = ""
