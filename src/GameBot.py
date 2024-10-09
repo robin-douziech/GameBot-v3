@@ -152,12 +152,19 @@ class GameBot(commands.Bot) :
             raise Exception(f"Cannot cancel participation of member '{member.name}#{member.discriminator}' to the event with id '{event_idstr}'")
 
     async def create_command_channel_for_member(self, member: discord.Member) :
+        """Create the member's command channel with appropriate permissions (depending on maintenance status and rules acceptation)"""
+        permissions = self.config["maintenance"] == "down" and (self.channels["rules"] is None or member in self.members_having_accepted_rules)
+        member_permissions = {
+            "read_messages": permissions,
+            "send_messages": permissions,
+            "create_instant_invite": False
+        }
         self.channels[f"bot_{member.name}#{member.discriminator}"] = await self.guild.create_text_channel(
             name="utilise-gamebot-ici",
             category=self.categories["bot"],
             topic=f"{member.name}#{member.discriminator}",
             overwrites={
-                member: discord.PermissionOverwrite(read_messages=True, send_messages=True, create_instant_invite=False),
+                member: discord.PermissionOverwrite(**member_permissions),
                 **{_member: discord.PermissionOverwrite(read_messages=False, send_messages=False, create_instant_invite=False) for _member in [m for m in self.guild.members if not(m.bot) and m != member]}
             }
         )

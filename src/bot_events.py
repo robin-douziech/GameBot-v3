@@ -115,7 +115,6 @@ async def on_ready():
                 if member in bot.members_having_accepted_rules :
 
                     await bot.create_command_channel_for_member(member)
-                    await bot.channels[f"bot_{member.name}#{member.discriminator}"].set_permissions(member, read_messages=True, send_messages=True, create_instant_invite=False)
 
                     for role_id in bot.config["rules_roles_backup"][f"{member.name}#{member.discriminator}"] :
                         if member.get_role(role_id) is None :
@@ -130,7 +129,6 @@ async def on_ready():
                 else :
 
                     await bot.create_command_channel_for_member(member)
-                    await bot.channels[f"bot_{member.name}#{member.discriminator}"].set_permissions(member, read_messages=False, send_messages=False, create_instant_invite=False)
 
                     bot.config["rules_roles_backup"][f"{member.name}#{member.discriminator}"] = await backup_roles(member, remove=True)
                     bot.write_config()
@@ -144,7 +142,6 @@ async def on_ready():
             for member in [m for m in bot.guild.members if not(m.bot)] :
 
                 await bot.create_command_channel_for_member(member)
-                await bot.channels[f"bot_{member.name}#{member.discriminator}"].set_permissions(member, read_messages=True, send_messages=True, create_instant_invite=False)
 
                 if member.get_role(ROLES_IDS["base"]) is None :
                     await member.add_roles(bot.roles["base"])
@@ -157,7 +154,6 @@ async def on_ready():
         for member in [m for m in bot.guild.members if not(m.bot)] :
 
             await bot.create_command_channel_for_member(member)
-            await bot.channels[f"bot_{member.name}#{member.discriminator}"].set_permissions(member, read_messages=False, send_messages=False, create_instant_invite=False)
             
             bot.config["maintenance_roles_backup"][f"{member.name}#{member.discriminator}"].extend(await backup_roles(member, remove=True))
             bot.write_config()
