@@ -112,16 +112,12 @@ async def invite_gamebot(ctx: commands.Context, *args, **kwargs) :
             # inviter un rôle
             for role in bot.guild.roles :
                 if args[1] == role.mention :
-                    for member in [m for m in role.members if not(m.bot) and f"{m.name}#{m.discriminator}" != event_idstr.split(':')[0]] :
-                        pseudo = f"{member.name}#{member.discriminator}"
-                        if not(pseudo in bot.vars["events"][event_idstr]["invited_guests"]
-                                       + bot.vars["events"][event_idstr]["waiting_guests"]
-                                       + bot.vars["events"][event_idstr]["waiting_guests"]) :
-                            try :
-                                await bot.invite_member(event_idstr, member)
-                                await bot.send(ctx.channel, f"Invitation à la soirée '{bot.vars['events'][event_idstr]['name']}' envoyée à {member.display_name}")
-                            except Exception as e :
-                                await bot.send(ctx.channel, f"Quelque chose s'est mal passé pendant l'invitation de {member.display_name}")
+                    if not(bot.role_is_invited_to_event(event_idstr, role)) :
+                        try :
+                            await bot.invite_role(event_idstr, role)
+                            await bot.send(ctx.channel, f"Tous les membres ayant le rôle {role.name} sont maintenant invités à la soirée '{bot.vars['events'][event_idstr]['name']}'")
+                        except Exception as e :
+                            await bot.send(ctx.channel, f"Quelque chose s'est mal passé pendant l'invitation du rôle {role.name}")
                     return
                 
             await bot.send(ctx.channel, f"Mauvaise utilisation de la commande. Utilise \"!help invite\" pour savoir comment utiliser cette commande")
@@ -164,18 +160,12 @@ async def uninvite_gamebot(ctx: commands.Context, *args, **kwargs) :
             for role in bot.guild.roles :
                 if args[1] == role.mention :
 
-                    # on supprime les "invited" puis les "waiting" puis les "present" pour éviter de faire une 
-                    # fausse joie aux "waiting" si on supprime un "present" avant eux et donc qu'une place se libère
-                    for pseudo in bot.vars["events"][event_idstr]["invited_guests"] \
-                                + bot.vars["events"][event_idstr]["waiting_guests"] \
-                                + bot.vars["events"][event_idstr]["present_guests"] :
-                        member = bot.get_discord_member(pseudo)
-                        if member.get_role(role.id) is not None and pseudo != event_idstr.split(':')[0] :
-                            try :
-                                await bot.uninvite_member(event_idstr, member)
-                                await bot.send(ctx.channel, f"Invitation à la soirée '{bot.vars['events'][event_idstr]['name']}' annulée pour {member.display_name}")
-                            except Exception as e :
-                                await bot.send(ctx.channel, f"Quelque chose s'est mal passé pendant l'annulation de l'invitation de {member.display_name}")
+                    if bot.role_is_invited_to_event(event_idstr, role) :
+                        try :
+                            await bot.uninvite_role(event_idstr, role)
+                            await bot.send(ctx.channel, f"Les membres ayant le rôle {role.name} et n'ayant pas été invité autrement que via ce rôle ont été désinvité")
+                        except Exception as e :
+                            await bot.send(ctx.channel, f"Quelque chose s'est mal passé pendant l'annulation de l'invitation du rôle {role.name}")
                     return
                 
             await bot.send(ctx.channel, f"Mauvaise utilisation de la commande. Utilise \"!help uninvite\" pour savoir comment utiliser cette commande")
