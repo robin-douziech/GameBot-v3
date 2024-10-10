@@ -236,6 +236,8 @@ __Si tu invites un rôle__ :
 Le paramètre guest doit être la mention du rôle (tu dois mentionner le rôle). Je te conseille donc d'utiliser cette commande \
 depuis ton salon avec le bot dans le serveur et non en messages privés pour pouvoir mentionner le rôle. Tous les membres \
 possédant ce rôle et n'étant pas encore invités seront invités.
+
+NB: si on ajoute un rôle invité à la soirée à un membre du serveur, ce membre sera invité à la soirée
 """,
 
 ####################################################################################################################################################################
@@ -265,6 +267,6 @@ Tu désinvite le rôle @role1, Toto est invité à la soirée et possède le rô
 - si tu as invité Toto explicitement avec la commande "!invite __event_id__ Toto", Toto est toujours invité
 - si tu n'as pas invité Toto explicitement et que Toto ne possède pas d'autre rôle encore invité à la soirée, Toto n'est plus invité
 
-
+NB: si on supprime un rôle invité à la soirée à un membre du serveur et que ce membre était invité uniquement via ce rôle, le membre sera désinvité de la soirée
 """
 }

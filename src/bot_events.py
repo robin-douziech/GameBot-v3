@@ -274,6 +274,37 @@ async def on_member_update(before: discord.Member, after: discord.Member) :
             if role.id == ROLES_IDS["maintenance"] and bot.config["maintenance"] == "up" :
                 await after.add_roles(role)
 
+            # si le rôle était invité à une soirée, on désinvite le membre (uniquement s'il n'était invité que via ce rôle)
+            if not(role.id in [
+                ROLES_IDS["7tadellien(ne)"],
+                ROLES_IDS["base"],
+                ROLES_IDS["maintenancve"]
+            ]) :
+                for event_idstr in bot.vars["events"] :
+
+                    # s'il n'était invité que via ce rôle
+                    if (all([not(bot.role_is_invited_to_event(event_idstr, r)) for r in after.roles]) # role n'est pas dans after.roles
+                        and (not(after in bot.channels[f"invitations_{event_idstr}"].overwrites)
+                             or not(bot.channels[f"invitations_{event_idstr}"].overwrites[after].read_messages))) :
+                        pseudo = f"{after.name}#{after.discriminator}"
+                        if pseudo in bot.vars["events"][event_idstr]["invited_guests"] :
+                            bot.vars["events"][event_idstr]["invited_guests"].remove(pseudo)
+                            msg = f"Changement d'état pour '{after.display_name}' : invité --> pas invité (suppression du rôle '{role.name}')"
+                        if pseudo in bot.vars["events"][event_idstr]["waiting_guests"] :
+                            bot.vars["events"][event_idstr]["waiting_guests"].remove(pseudo)
+                            msg = f"Changement d'état pour '{after.display_name}' : liste d'attente --> pas invité (suppression du rôle '{role.name}')"
+                            await bot.send(after.dm_channel, f"Tu as été retiré(e) des personnes invitées à la soirée '{bot.vars['events'][event_idstr]['name']}' car tu n'as plus le rôle '{role.name}'.")
+                        if pseudo in bot.vars["events"][event_idstr]["present_guests"] :
+                            bot.vars["events"][event_idstr]["present_guests"].remove(pseudo)
+                            msg = f"Changement d'état pour '{after.display_name}' : présent --> pas invité (suppression du rôle '{role.name}')"
+                            await bot.send(after.dm_channel, f"Tu as été retiré(e) des personnes invitées à la soirée '{bot.vars['events'][event_idstr]['name']}' car tu n'as plus le rôle '{role.name}'.")
+                            await bot.channels[f"soirées_{event_idstr}"].set_permissions(after, read_messages=False, send_messages=False, create_instant_invite=False)
+                        bot.write_json("events")
+
+                        await bot.update_waiting_list(event_idstr)
+
+                        await bot.send(bot.channels[f"logs_{event_idstr}"], msg)
+
         # ajout de rôle
         for role in [r for r in after.roles if not(r in before.roles)] :
 
@@ -290,6 +321,15 @@ async def on_member_update(before: discord.Member, after: discord.Member) :
                     bot.config["rules_roles_backup"][f"{after.name}#{after.discriminator}"].append(role.id)
                     bot.write_config()
                 await after.remove_roles(role)
+
+            # si le rôle est invité à une soirée, on invite le membre
+            for event_idstr in bot.vars["events"] :
+                if bot.role_is_invited_to_event(event_idstr, role) :
+                    pseudo = f"{after.name}#{after.discriminator}"
+                    if not(pseudo in bot.vars["events"][event_idstr]["invited_guests"]) :
+                        bot.vars["events"][event_idstr]["invited_guests"].append(pseudo)
+                        bot.write_json("events")
+                        await bot.send(bot.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{after.display_name}' : pas invité --> invité (ajout du rôle '{role.name}')")
 
         bot.write_json("members")
 

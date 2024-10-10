@@ -592,6 +592,10 @@ class GameBot(commands.Bot) :
             raise Exception(f"Cannot uninvite role '{role.name}' from the event")            
         
     async def update_permissions_on_event_channels(self, member: discord.Member|None = None) :
+        """Ajuste les permissions sur les salons des soirées pour le membre renseigné ou pour tout le monde si aucun membre n'est renseigné
+        en fonction de l'état de maintenance du serveur et de la réaction au message des règles si cette fonctionnalité est utilisée
+        Cela ne désinvite pas le membre des soirées, ça l'empêche temporairement de voir les salon (jusqu'à la fin de la maintenance
+        ou tant qu'il n'a pas réagis au message des règles)."""
 
         members_can_see_channels = self.config["maintenance"] == "down"
 

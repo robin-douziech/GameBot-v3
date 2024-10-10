@@ -26,9 +26,9 @@ async def help_gamebot(ctx: commands.Context, *args, **kwargs) :
         help_message += "- !invite : sert à inviter des membres du serveur à l'une de test soirées\n"
         help_message += "- !uninvite : sert à annuler une invitation à une soirée\n"
         if author.get_role(ROLES_IDS["admin"]) is not None :
-            help_message += "- logs : afficher les logs du bot\n"
-            help_message += "- maintenance : entrer ou sortir du mode maintenance du serveur\n"
-            help_message += "- kill : éteindre le bot\n"
+            help_message += "- !logs : afficher les logs du bot\n"
+            help_message += "- !maintenance : entrer ou sortir du mode maintenance du serveur\n"
+            help_message += "- !kill : éteindre le bot\n"
         help_message += "\nSi tu veux plus de détails sur l'utilisation d'une commande, utilise \"!help __commande__\""
         await bot.send(ctx.channel, help_message)
 
