@@ -198,7 +198,7 @@ async def on_ready():
             await bot.send(bot.channels[f"logs_{event_idstr}"], msg)
 
         # pour chaque rôle invité, on vérifie si tous les membres ayant ce rôle sont dans les listes
-        for role in [r for r in bot.channels[f"invitations_{event_idstr}"].overwrites if isinstance(r, discord.Role)] :
+        for role in [r for r in bot.channels[f"invitations_{event_idstr}"].overwrites if isinstance(r, discord.Role) and bot.channels[f"invitations_{event_idstr}"].overwrites[r].read_messages] :
 
             for member in [m for m in role.members if not(m.bot)] :
 
