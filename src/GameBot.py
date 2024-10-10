@@ -331,6 +331,11 @@ class GameBot(commands.Bot) :
             case _ :
                 raise Exception("Unknown logging level")
             
+    def member_is_invited_to_event(self, event_idstr: str, member: discord.Member) :
+        return not(all([not(self.role_is_invited_to_event(event_idstr, role)) for role in member.roles])
+                and (not(member in self.channels[f"invitations_{event_idstr}"].overwrites)
+                     or not(self.channels[f"invitations_{event_idstr}"].overwrites[member].read_messages)))
+            
     def private_command(self, function: callable) :
         """ Decorator to apply to a command so it can only be sent in the dedicated private channel """
         async def wrapper(ctx: commands.Context, *args, **kwargs):
