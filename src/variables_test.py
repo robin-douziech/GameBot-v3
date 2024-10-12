@@ -2,27 +2,27 @@ BOT_GUILD_ID = 1282342173022621726
 BOT_OWNER_ID = 394185214479302656
 
 CATEGORY_IDS = {
-    "invitations": 1288199433925689354,
-    "soirées": 1288199479677419642,
-    "logs": 1288199503022915685,
-    "administration": 1288199568315514941,
-    "bot": 1292429126585811015
+    "invitations": 0,
+    "soirées": 0,
+    "logs": 0,
+    "administration": 0,
+    "bot": 0
 }
 
 CHANNEL_IDS = {
-    "bienvenue": 1282342173022621729,
-    "informations" : 1289260988830580868,
-    "rules": 1288199250764763250,
-    "annonces": 1282367924291502161,
-    "anniversaires": 1289951637854486601,
-    "maintenance": 1290010257925341225,
-    "logs-gamebot": 1292048432495591444
+    "bienvenue": 0,
+    "informations" : 0,
+    "rules": 0,
+    "annonces": 0,
+    "anniversaires": 0,
+    "maintenance": 0,
+    "logsgamebot": 0
 }
 
 ROLES_IDS = {
-    "@everyone": 1282342173022621726,
-    "admin": 1288199614306189383,
-    "base": 1290042546965450763,
-    "7tadellien(ne)": 1290010589611032576,
-    "maintenance": 1289955791012499466
+    "@everyone": 0,
+    "admin": 0,
+    "base": 0,
+    "7tadellien": 0,
+    "maintenance": 0
 }

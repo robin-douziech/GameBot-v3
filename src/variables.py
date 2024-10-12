@@ -10,7 +10,14 @@ else :
 
 DISCORD_MAX_MESSAGE_LENGTH = 2000
 
-ROLES_TO_IGNORE = ["base", "7tadellien(ne)", "maintenance", "@everyone", "admin"]
+ROLES_TO_IGNORE = ["base", "7tadellien", "maintenance", "@everyone", "admin"]
+CHANNELS_BY_ROLE = {
+    "base": ["bienvenue", "informations", "rules"],
+    "7tadellien": ["annonces", "anniversaires"],
+    "maintenance": ["maintenance"],
+    "admin": ["logsgamebot"],
+    "@everyone": []
+}
 
 BOT_VARS_DEFAULTS = {
     "members": {
@@ -32,6 +39,9 @@ BOT_VARS_DEFAULTS = {
         "invited_guests": [],
         "waiting_guests": [],
         "present_guests": [],
+        
+        "invited_members": [],
+        "invited_roles": [],
 
         "invitations_channel_id": 0,
         "soirées_channel_id": 0,
@@ -42,6 +52,7 @@ BOT_VARS_DEFAULTS = {
     "config": {
         "hours_offset": 0,
         "logs_retention_period": "1 month",
+        "rules": True,
         "maintenance": "down",
         "maintenance_roles_backup": {},
         "rules_roles_backup": {}

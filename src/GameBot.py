@@ -44,7 +44,7 @@ class GameBot(commands.Bot) :
         for var_name in self.vars :
             if not(os.path.exists(self.files[var_name])) :
                 self.write_json(var_name)
-        for string in ["config", "messages"] :
+        for string in ["config", "messages", "ids_test", "ids_prod"] :
             if not(os.path.exists(f"json/{string}.json")) :
                 with open(f"json/{string}.json", "x") as f :
                     f.write("{}")
@@ -57,9 +57,9 @@ class GameBot(commands.Bot) :
             # on lui ajoute le rôle "base"
             await discord_member.add_roles(self.roles["base"])
 
-            # si la fonctionnalité "règles" n'est pas utilisée on lui ajoute le rôle "7tadellien(ne)"
+            # si la fonctionnalité "règles" n'est pas utilisée on lui ajoute le rôle "7tadellien"
             if self.channels["rules"] is None :
-                await discord_member.add_roles(self.roles["7tadellien(ne)"])
+                await discord_member.add_roles(self.roles["7tadellien"])
 
             # on lui crée son salon de discussion avec le bot
             await self.create_command_channel_for_member(self.get_discord_member(pseudo))
@@ -90,7 +90,7 @@ class GameBot(commands.Bot) :
 
         else :
 
-            await self.send(self.channels["logs-gamebot"], f"Je ne peux pas ajouter {member.display_name} à la liste des membres présents à la soirée '{self.vars['events'][event_idstr]['name']}' (event_idstr = {event_idstr})")
+            await self.send(self.channels["logsgamebot"], f"Je ne peux pas ajouter {member.display_name} à la liste des membres présents à la soirée '{self.vars['events'][event_idstr]['name']}' (event_idstr = {event_idstr})")
             raise Exception(f"Cannot add member '{member.name}#{member.discriminator}' to the present guests list for event with id '{event_idstr}'")
 
     async def add_member_to_waiting_guests(self, event_idstr: str, member: discord.Member) :
@@ -109,7 +109,7 @@ class GameBot(commands.Bot) :
 
         else :
 
-            await self.send(self.channels["logs-gamebot"], f"Je ne peux pas ajouter {member.display_name} à la liste d'attente de la soirée '{self.vars['events'][event_idstr]['name']}' (event_idstr = {event_idstr})")
+            await self.send(self.channels["logsgamebot"], f"Je ne peux pas ajouter {member.display_name} à la liste d'attente de la soirée '{self.vars['events'][event_idstr]['name']}' (event_idstr = {event_idstr})")
             raise Exception(f"Cannot add member '{member.name}#{member.discriminator}' to the waiting list for event with id '{event_idstr}'")
 
     def admin_command(self, function: callable) :
@@ -139,7 +139,9 @@ class GameBot(commands.Bot) :
             else :
                 self.vars["events"][event_idstr]["present_guests"].remove(f"{member.name}#{member.discriminator}")
                 self.vars["events"][event_idstr]["invited_guests"].append(f"{member.name}#{member.discriminator}")
-                await self.channels[f"soirées_{event_idstr}"].set_permissions(member, read_messages=False)
+                await self.remove_permissions_on_channel(self.channels[f"soirées_{event_idstr}"], member)
+                #self.channels[f"soirées_{event_idstr}"].overwrites.pop(member)
+                #await self.channels[f"soirées_{event_idstr}"].set_permissions(member, read_messages=False)
                 await self.send(member.dm_channel, f"Tu as été retiré(e) des membres présents à la soirée '{self.vars['events'][event_idstr]['name']}'. Tu es cependant toujours invité(e) à cette soirée donc si tu changes d'avis et souhaites finalement y participer, tu peux remettre ta réaction dans le salon {self.channels[f'invitations_{event_idstr}'].mention}.")
                 await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : présent(e) --> invité(e)")
             self.write_json("events")
@@ -148,7 +150,7 @@ class GameBot(commands.Bot) :
 
         else :
 
-            await self.send(self.channels["logs-gamebot"], f"Je ne peux pas annuler la participation de {member.display_name} à la soirée '{self.vars['events'][event_idstr]['name']}' (event_idstr = {event_idstr})")
+            await self.send(self.channels["logsgamebot"], f"Je ne peux pas annuler la participation de {member.display_name} à la soirée '{self.vars['events'][event_idstr]['name']}' (event_idstr = {event_idstr})")
             raise Exception(f"Cannot cancel participation of member '{member.name}#{member.discriminator}' to the event with id '{event_idstr}'")
 
     async def create_command_channel_for_member(self, member: discord.Member) :
@@ -196,7 +198,7 @@ class GameBot(commands.Bot) :
 
         except Exception as e :
 
-            await self.send(self.channels["logs-gamebot"], f"Quelque chose s'est mal passé pendant la suppression d'une soirée.\nevent_idstr: {event_idstr}\nerror: {e}")
+            await self.send(self.channels["logsgamebot"], f"Quelque chose s'est mal passé pendant la suppression d'une soirée.\nevent_idstr: {event_idstr}\nerror: {e}")
             raise Exception(e)
     
     def divide_message(self, message_content: str, wrappers: tuple[str] = ('', '')) :
@@ -271,15 +273,20 @@ class GameBot(commands.Bot) :
                     year = f"{int(year)+1}"
         return (day, month, year, hours, minutes)
     
+    def get_role_by_id(self, role_id: int) :
+        for role in self.guild.roles :
+            if role.id == role_id :
+                return role
+        return None
+    
     async def invite_member(self, event_idstr: str, member: discord.Member) :
 
         if (event_idstr in self.vars["events"] and self.vars["events"][event_idstr]["created"]
-            and not(f"{member.name}#{member.discriminator}" in self.vars["events"][event_idstr]["invited_guests"]
-                                                             + self.vars["events"][event_idstr]["waiting_guests"]
-                                                             + self.vars["events"][event_idstr]["present_guests"])) :
+            and not(member.id in self.vars["events"][event_idstr]["invited_members"])) :
             
             # on ajoute le membre à la liste des invités
             self.vars["events"][event_idstr]["invited_guests"].append(f"{member.name}#{member.discriminator}")
+            self.vars["events"][event_idstr]["invited_members"].append(member.id)
             self.write_json("events")
 
             # on lui donne accès au salon d'invitation
@@ -288,13 +295,13 @@ class GameBot(commands.Bot) :
             await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : pas invité(e) --> invité(e)")
 
         else :
-            await self.send(self.channels["logs-gamebot"], f"Quelque chose s'est mal passé pendant l'invitation d'un membre à une soirée.\nsoirée: {event_idstr} - {self.vars['events'][event_idstr]['name']}\nmembre : {member.display_name}")
+            await self.send(self.channels["logsgamebot"], f"Quelque chose s'est mal passé pendant l'invitation d'un membre à une soirée.\nsoirée: {event_idstr} - {self.vars['events'][event_idstr]['name']}\nmembre : {member.display_name}")
             raise Exception(f"Cannot invite member '{member.display_name}' to the event")
 
     async def invite_role(self, event_idstr: str, role: discord.Role) :
 
         if (event_idstr in self.vars["events"] and self.vars["events"][event_idstr]["created"]
-            and not(self.role_is_invited_to_event(event_idstr, role))) :
+            and not(role.id in self.vars["events"][event_idstr]["invited_roles"])) :
 
             # on ajoute les membres dans les listes de la soirée
             msg = ""
@@ -304,15 +311,17 @@ class GameBot(commands.Bot) :
                                                                   + self.vars["events"][event_idstr]["present_guests"])] :
                 self.vars["events"][event_idstr]["invited_guests"].append(f"{member.name}#{member.discriminator}")
                 msg += f"Changement d'état pour '{member.display_name}' : pas invité(e) --> invité(e)\n"
+            self.vars["events"][event_idstr]["invited_roles"].append(role.id)
             self.write_json("events")
 
             # on donne accès au salon d'invitation au rôle
             await self.channels[f"invitations_{event_idstr}"].set_permissions(role, **EVENT_CHANNEL_PERMISSIONS["invitations"])
-
-            await self.send(self.channels[f"logs_{event_idstr}"], msg)
+            
+            if len(msg) > 0 :
+                await self.send(self.channels[f"logs_{event_idstr}"], msg)
 
         else :
-            await self.send(self.channels["logs-gamebot"], f"Quelque chose s'est mal passé pendant l'invitation d'un rôle à une soirée.\nsoirée: {event_idstr} - {self.vars['events'][event_idstr]['name']}\nrole : {role.name}")
+            await self.send(self.channels["logsgamebot"], f"Quelque chose s'est mal passé pendant l'invitation d'un rôle à une soirée.\nsoirée: {event_idstr} - {self.vars['events'][event_idstr]['name']}\nrole : {role.name}")
             raise Exception(f"Cannot invite role '{role.name}' to the event")
     
     def log(self, message: str, level: str = "info") :
@@ -332,9 +341,15 @@ class GameBot(commands.Bot) :
                 raise Exception("Unknown logging level")
             
     def member_is_invited_to_event(self, event_idstr: str, member: discord.Member) :
-        return not(all([not(self.role_is_invited_to_event(event_idstr, role)) for role in member.roles])
-                and (not(member in self.channels[f"invitations_{event_idstr}"].overwrites)
-                     or not(self.channels[f"invitations_{event_idstr}"].overwrites[member].read_messages)))
+        return not(                                                                                                    # NOT (
+            not(f"{member.name}#{member.discriminator}" == event_idstr.split(':')[0])                                  # il n'est pas l'hôte
+            and all([not(self.role_is_invited_to_event(event_idstr, role)) for role in member.roles])                  # aucun de ses rôles n'est invité
+            and (all([not(self.role_is_invited_to_event(event_idstr, self.get_role_by_id(role_id)))                    # aucun de ses rôles en backup n'est invité
+                      for role_id in self.config["maintenance_roles_backup"][f"{member.name}#{member.discriminator}"]  #
+                                   + self.config["rules_roles_backup"][f"{member.name}#{member.discriminator}"]]))     #
+            and (not(member in self.channels[f"invitations_{event_idstr}"].overwrites)                                 # il n'est pas invité personnellement
+                     or not(self.channels[f"invitations_{event_idstr}"].overwrites[member].read_messages))             #     )
+        )
             
     def private_command(self, function: callable) :
         """ Decorator to apply to a command so it can only be sent in the dedicated private channel """
@@ -454,13 +469,15 @@ class GameBot(commands.Bot) :
             self.vars["events"][event_idstr]["invited_guests"].remove(f"{member.name}#{member.discriminator}")
             self.write_json("events")
 
-            await self.channels[f"invitations_{event_idstr}"].set_permissions(member, read_messages=False)
+            #self.channels[f"invitations_{event_idstr}"].overwrites.pop(member)
+            #await self.channels[f"invitations_{event_idstr}"].set_permissions(member, read_messages=False)
+            await self.remove_permissions_on_channel(self.channels[f"invitations_{event_idstr}"], member)
 
             await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : invité --> pas invité")
 
         else :
 
-            await self.send(self.channels["logs-gamebot"], f"Je ne peux pas ajouter {member.display_name} à la liste d'attente de la soirée '{self.vars['events'][event_idstr]['name']}' (event_idstr = {event_idstr})")
+            await self.send(self.channels["logsgamebot"], f"Je ne peux pas ajouter {member.display_name} à la liste d'attente de la soirée '{self.vars['events'][event_idstr]['name']}' (event_idstr = {event_idstr})")
             raise Exception(f"Cannot remove member '{member.name}#{member.discriminator}' from the invited_guests list for event with id '{event_idstr}'")
 
     async def remove_member_from_present_guests(self, event_idstr: str, member: discord.Member) :
@@ -471,8 +488,12 @@ class GameBot(commands.Bot) :
             self.vars["events"][event_idstr]["present_guests"].remove(f"{member.name}#{member.discriminator}")
             self.write_json("events")
 
-            await self.channels[f"invitations_{event_idstr}"].set_permissions(member, read_messages=False)
-            await self.channels[f"soirées_{event_idstr}"].set_permissions(member, read_messages=False)
+            #self.channels[f"invitations_{event_idstr}"].overwrites.pop(member)
+            #self.channels[f"soirées_{event_idstr}"].overwrites.pop(member)
+            #await self.channels[f"invitations_{event_idstr}"].set_permissions(member, read_messages=False)
+            #await self.channels[f"soirées_{event_idstr}"].set_permissions(member, read_messages=False)
+            await self.remove_permissions_on_channel(self.channels[f"invitations_{event_idstr}"], member)
+            await self.remove_permissions_on_channel(self.channels[f"soirées_{event_idstr}"], member)
 
             await self.send(member.dm_channel, f"Tu as été retiré(e) des personnes invitées à la soirée '{self.vars['events'][event_idstr]['name']}'.")
             await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : présent --> pas invité")
@@ -481,7 +502,7 @@ class GameBot(commands.Bot) :
 
         else :
 
-            await self.send(self.channels["logs-gamebot"], f"Je ne peux pas ajouter {member.display_name} à la liste d'attente de la soirée '{self.vars['events'][event_idstr]['name']}' (event_idstr = {event_idstr})")
+            await self.send(self.channels["logsgamebot"], f"Je ne peux pas ajouter {member.display_name} à la liste d'attente de la soirée '{self.vars['events'][event_idstr]['name']}' (event_idstr = {event_idstr})")
             raise Exception(f"Cannot remove member '{member.name}#{member.discriminator}' from the present_guests list for event with id '{event_idstr}'")
 
     async def remove_member_from_waiting_guests(self, event_idstr: str, member: discord.Member) :
@@ -492,7 +513,9 @@ class GameBot(commands.Bot) :
             self.vars["events"][event_idstr]["waiting_guests"].remove(f"{member.name}#{member.discriminator}")
             self.write_json("events")
 
-            await self.channels[f"invitations_{event_idstr}"].set_permissions(member, read_messages=False)
+            #self.channels[f"invitations_{event_idstr}"].overwrites.pop(member)
+            #await self.channels[f"invitations_{event_idstr}"].set_permissions(member, read_messages=False)
+            await self.remove_permissions_on_channel(self.channels[f"invitations_{event_idstr}"], member)
 
             await self.send(member.dm_channel, f"Tu as été retiré(e) des personnes invitées à la soirée '{self.vars['events'][event_idstr]['name']}'.")
             await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : liste d'attente --> pas invité")
@@ -501,11 +524,14 @@ class GameBot(commands.Bot) :
 
         else :
 
-            await self.send(self.channels["logs-gamebot"], f"Je ne peux pas ajouter {member.display_name} à la liste d'attente de la soirée '{self.vars['events'][event_idstr]['name']}' (event_idstr = {event_idstr})")
+            await self.send(self.channels["logsgamebot"], f"Je ne peux pas ajouter {member.display_name} à la liste d'attente de la soirée '{self.vars['events'][event_idstr]['name']}' (event_idstr = {event_idstr})")
             raise Exception(f"Cannot remove member '{member.name}#{member.discriminator}' from the waiting_guests list for event with id '{event_idstr}'")
         
+    async def remove_permissions_on_channel(self, channel: discord.TextChannel, target: discord.Member|discord.Role) :
+        await channel.set_permissions(target, overwrite=None)
+        
     def role_is_invited_to_event(self, event_idstr: str, role: discord.Role) :
-        return role in self.channels[f"invitations_{event_idstr}"].overwrites and self.channels[f"invitations_{event_idstr}"].overwrites[role].read_messages
+        return (role in self.channels[f"invitations_{event_idstr}"].overwrites and self.channels[f"invitations_{event_idstr}"].overwrites[role].read_messages)
 
     def save_message(self, title: str, ids: list[int]) :
         """ This function saves an official bot message into json/messages.json (so that we can retreive this message) """
@@ -538,9 +564,7 @@ class GameBot(commands.Bot) :
     async def uninvite_member(self, event_idstr: str, member: discord.Member) :
 
         if (event_idstr in self.vars["events"] and self.vars["events"][event_idstr]["created"]
-            and f"{member.name}#{member.discriminator}" in self.vars["events"][event_idstr]["invited_guests"]
-                                                         + self.vars["events"][event_idstr]["waiting_guests"]
-                                                         + self.vars["events"][event_idstr]["present_guests"]) :
+            and member.id in self.vars["events"][event_idstr]["invited_members"]) :
             
             if f"{member.name}#{member.discriminator}" in self.vars["events"][event_idstr]["invited_guests"] :
                 await self.remove_member_from_invited_guests(event_idstr, member)
@@ -551,21 +575,24 @@ class GameBot(commands.Bot) :
             elif f"{member.name}#{member.discriminator}" in self.vars["events"][event_idstr]["present_guests"] :
                 await self.remove_member_from_present_guests(event_idstr, member)
 
+            self.vars["events"][event_idstr]["invited_members"].remove(member.id)
+            self.write_json("events")
+
         else:
 
-            await self.send(self.channels["logs-gamebot"], f"Je n'ai pas réussi à désinviter {member.display_name} d'une soirée")
+            await self.send(self.channels["logsgamebot"], f"Je n'ai pas réussi à désinviter {member.display_name} d'une soirée")
             raise Exception(f"Cannot uninvite '{member.display_name}' from the event")
         
     async def uninvite_role(self, event_idstr: str, role: discord.Role) :
         
         if (event_idstr in self.vars["events"] and self.vars["events"][event_idstr]["created"]
-            and self.role_is_invited_to_event(event_idstr, role)) :
+            and role.id in self.vars["events"][event_idstr]["invited_roles"]) :
 
             # membres ayant les droits en lecture sur le salon d'une autre manière que via ce rôle
             # (c-a-d explicitement en tant que membre ou via un autre rôle)
             invited_members = [m for m in self.channels[f"invitations_{event_idstr}"].overwrites
                                if isinstance(m, discord.Member) and self.channels[f"invitations_{event_idstr}"].overwrites[m].read_messages] \
-                            + [m for r in self.channels[f"invitations_{event_idstr}"].overwrites if isinstance(r, discord.Role) and r != role for m in r.members]
+                            + [m for r in self.channels[f"invitations_{event_idstr}"].overwrites if isinstance(r, discord.Role) and self.channels[f"invitations_{event_idstr}"].overwrites[r].read_messages and r != role for m in r.members]
             
             # on supprime les membres ayant la rôle et n'ayant pas été invité en personne
             msg = ""
@@ -580,20 +607,26 @@ class GameBot(commands.Bot) :
                     await self.send(member.dm_channel, f"Tu as été retiré(e) des personnes invitées à la soirée '{self.vars['events'][event_idstr]['name']}'.")
                 if pseudo in self.vars["events"][event_idstr]["present_guests"] :
                     self.vars["events"][event_idstr]["present_guests"].remove(pseudo)
-                    await self.channels[f"soirées_{event_idstr}"].set_permissions(member, read_messages=False, send_messages=False, create_instant_invite=False)
+                    #self.channels[f"soirées_{event_idstr}"].overwrites.pop(member)
+                    #await self.channels[f"soirées_{event_idstr}"].set_permissions(member, read_messages=False, send_messages=False, create_instant_invite=False)
+                    await self.remove_permissions_on_channel(self.channels[f"soirées_{event_idstr}"], member)
                     msg += f"Changement d'état pour '{member.display_name}' : présent --> pas invité\n"
                     await self.send(member.dm_channel, f"Tu as été retiré(e) des personnes invitées à la soirée '{self.vars['events'][event_idstr]['name']}'.")
+            self.vars["events"][event_idstr]["invited_roles"].remove(role.id)
             self.write_json("events")
 
             # on retire les droits sur le salon d'invitation au rôle
-            await self.channels[f"invitations_{event_idstr}"].set_permissions(role, read_messages=False, send_messages=False, create_instant_invite=False)
+            #self.channels[f"invitations_{event_idstr}"].overwrites.pop(role)
+            #await self.channels[f"invitations_{event_idstr}"].set_permissions(role, read_messages=False, send_messages=False, create_instant_invite=False)
+            await self.remove_permissions_on_channel(self.channels[f"invitations_{event_idstr}"], role)
 
             await self.update_waiting_list(event_idstr)
 
-            await self.send(self.channels[f"logs_{event_idstr}"], msg)
+            if len(msg) > 0 :
+                await self.send(self.channels[f"logs_{event_idstr}"], msg)
 
         else :
-            await self.send(self.channels["logs-gamebot"], f"Quelque chose s'est mal passé pendant l'annulation de l'invitation d'un rôle à une soirée.\nsoirée: {event_idstr} - {self.vars['events'][event_idstr]['name']}\nrole : {role.name}")
+            await self.send(self.channels["logsgamebot"], f"Quelque chose s'est mal passé pendant l'annulation de l'invitation d'un rôle à une soirée.\nsoirée: {event_idstr} - {self.vars['events'][event_idstr]['name']}\nrole : {role.name}")
             raise Exception(f"Cannot uninvite role '{role.name}' from the event")            
         
     async def update_permissions_on_event_channels(self, member: discord.Member|None = None) :
@@ -611,22 +644,30 @@ class GameBot(commands.Bot) :
                 # on ajuste les permissions du salon de logs
                 host = self.get_discord_member(event_idstr.split(':')[0])
                 host_can_see_channels = members_can_see_channels and (self.channels["rules"] is None or host in self.members_having_accepted_rules)
-                await self.channels[f"logs_{event_idstr}"].set_permissions(host, read_messages=host_can_see_channels, send_messages=False, create_instant_invite=False)
+                if host_can_see_channels :
+                    await self.channels[f"logs_{event_idstr}"].set_permissions(host, **EVENT_CHANNEL_PERMISSIONS["logs"])
+                else :
+                    await self.remove_permissions_on_channel(self.channels[f"logs_{event_idstr}"], host)
 
                 # pour chaque invité ...
-                for pseudo in self.vars["events"][event_idstr]["invited_guests"] \
-                            + self.vars["events"][event_idstr]["waiting_guests"] \
-                            + self.vars["events"][event_idstr]["present_guests"] :
+                for member_id in self.vars["events"][event_idstr]["invited_members"] :
                     
-                    member = self.get_discord_member(pseudo)
+                    member = self.guild.get_member(member_id)
+                    pseudo = f"{member.name}#{member.discriminator}"
                     can_see_channels = members_can_see_channels and (self.channels["rules"] is None or member in self.members_having_accepted_rules)
 
                     # on ajuste les permissions du salon d'invitation
-                    await self.channels[f"invitations_{event_idstr}"].set_permissions(member, read_messages=can_see_channels, send_messages=False, create_instant_invite=False)
+                    if can_see_channels :
+                        await self.channels[f"invitations_{event_idstr}"].set_permissions(member, **EVENT_CHANNEL_PERMISSIONS["invitations"])
+                    else :
+                        await self.remove_permissions_on_channel(self.channels[f"invitations_{event_idstr}"], member)
                     
                     # on ajuste les permissions du salon de la soirée
                     if pseudo in self.vars["events"][event_idstr]["present_guests"] :
-                        await self.channels[f"soirées_{event_idstr}"].set_permissions(member, read_messages=can_see_channels, send_messages=can_see_channels, create_instant_invite=False)
+                        if can_see_channels :
+                            await self.channels[f"soirées_{event_idstr}"].set_permissions(member, **EVENT_CHANNEL_PERMISSIONS["soirées"])
+                        else :
+                            await self.remove_permissions_on_channel(self.channels[f"soirées_{event_idstr}"], member)
 
         else : # on anctualise les permissions des salons pour le membre renseigné
 
@@ -637,18 +678,25 @@ class GameBot(commands.Bot) :
 
                 # si le membre est l'hôte de la soirée
                 if event_idstr.split(':')[0] == pseudo :
-                    await self.channels[f"logs_{event_idstr}"].set_permissions(member, read_messages=can_see_channels, send_messages=False, create_instant_invite=False)
+                    if can_see_channels :
+                        await self.channels[f"logs_{event_idstr}"].set_permissions(member, **EVENT_CHANNEL_PERMISSIONS["logs"])
+                    else :
+                        await self.remove_permissions_on_channel(self.channels[f"logs_{event_idstr}"], member)
 
                 # si le membre est invité
-                if pseudo in self.vars["events"][event_idstr]["invited_guests"] \
-                           + self.vars["events"][event_idstr]["waiting_guests"] \
-                           + self.vars["events"][event_idstr]["present_guests"] :
+                if member.id in self.vars["events"][event_idstr]["invited_members"] :
 
-                    await self.channels[f"invitations_{event_idstr}"].set_permissions(member, read_messages=can_see_channels, send_messages=False, create_instant_invite=False)
-                    
+                    if can_see_channels :
+                        await self.channels[f"invitations_{event_idstr}"].set_permissions(member, **EVENT_CHANNEL_PERMISSIONS["invitations"])
+                    else :
+                        await self.remove_permissions_on_channel(self.channels[f"invitations_{event_idstr}"], member)
+
                     # si le membre est présent à la soirée
                     if pseudo in self.vars["events"][event_idstr]["present_guests"] :
-                        await self.channels[f"soirées_{event_idstr}"].set_permissions(member, read_messages=can_see_channels, send_messages=can_see_channels, create_instant_invite=False)
+                        if can_see_channels :
+                            await self.channels[f"soirées_{event_idstr}"].set_permissions(member, **EVENT_CHANNEL_PERMISSIONS["soirées"])
+                        else :
+                            await self.remove_permissions_on_channel(self.channels[f"soirées_{event_idstr}"], member)
 
     async def update_waiting_list(self, event_idstr: str) :
 
@@ -668,7 +716,7 @@ class GameBot(commands.Bot) :
 
         else :
 
-            await self.send(self.channels["logs-gamebot"], f"Je ne peux pas mettre à jour la liste d'attente pour la soirée '{self.vars['events'][event_idstr]['name']}' (event_idstr = {event_idstr})")
+            await self.send(self.channels["logsgamebot"], f"Je ne peux pas mettre à jour la liste d'attente pour la soirée '{self.vars['events'][event_idstr]['name']}' (event_idstr = {event_idstr})")
             raise Exception(f"Cannot update waiting list for event with id '{event_idstr}'")
 
     def write_json(self, var_name: str) :

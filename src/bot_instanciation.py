@@ -3,13 +3,18 @@ from GameBot import *
 bot = GameBot()
 bot.remove_command("help")
 
-async def backup_roles(member: discord.Member, remove: bool = False) :
-    backup_roles = []
+async def backup_roles(result_list: list[int], member: discord.Member, remove: bool = False) :
     for role in [r for r in member.roles if not(r in [bot.roles[role_str] for role_str in ROLES_TO_IGNORE])] :
-        backup_roles.append(role.id)
+        result_list.append(role.id)
         if remove :
             await member.remove_roles(role)
-    return backup_roles
+    return result_list
+
+def get_role_by_name(role_name: str) :
+    for role in bot.guild.roles :
+        if role.name == role_name :
+            return role
+    return None
 
 def get_time_ago(delta: str) :
     (day, month, year) = bot.get_current_datetime()[:3]

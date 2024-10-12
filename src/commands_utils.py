@@ -66,17 +66,18 @@ async def maintenance_gamebot(ctx: commands.Context, *args, **kwargs) :
             bot.config["maintenance"] = "up"
 
             # variable pour garder une trace des roles de chaque membre (pour les restituer à la fin de la maintenance)
-            bot.config["maintenance_roles_backup"] = {}
+            bot.config["maintenance_roles_backup"] = {f"{member.name}#{member.discriminator}": [] for member in [m for m in bot.guild.members if not(m.bot)]}
 
             for member in [m for m in bot.guild.members if not(m.bot)] :
 
                 # on retire les permissions sur son salon privé avec le bot
-                await bot.channels[f"bot_{member.name}#{member.discriminator}"].set_permissions(member, read_messages=False, send_messages=False, create_instant_invite=False)
+                #await bot.channels[f"bot_{member.name}#{member.discriminator}"].set_permissions(member, read_messages=False, send_messages=False, create_instant_invite=False)
+                await bot.remove_permissions_on_channel(bot.channels[f"bot_{member.name}#{member.discriminator}"], member)
 
                 # on garde une trace des roles du membre et on les retire
-                bot.config["maintenance_roles_backup"][f"{member.name}#{member.discriminator}"] = await backup_roles(member, remove=True)
+                await backup_roles(bot.config["maintenance_roles_backup"][f"{member.name}#{member.discriminator}"], member, remove=True)
 
-                await member.remove_roles(bot.roles["7tadellien(ne)"])
+                await member.remove_roles(bot.roles["7tadellien"])
                 await member.remove_roles(bot.roles["base"])
                 await member.add_roles(bot.roles["maintenance"])
 
@@ -101,14 +102,14 @@ async def maintenance_gamebot(ctx: commands.Context, *args, **kwargs) :
             # on rend les permissions sur les salon des soirées
             await bot.update_permissions_on_event_channels()
 
-            # si la fonctionnalité "règles" est utilisée, on ajoute le rôle "7tadellien(ne)" uniquement aux membres ayant accepté les règles
+            # si la fonctionnalité "règles" est utilisée, on ajoute le rôle "7tadellien" uniquement aux membres ayant accepté les règles
             if bot.channels["rules"] is not None :
 
                 async for member in bot.rules_reaction.users() :
 
                     if not(member.bot) :
 
-                        await member.add_roles(bot.roles["7tadellien(ne)"])
+                        await member.add_roles(bot.roles["7tadellien"])
 
                         # on restitue les rôles du membre
                         for role_id in bot.config["maintenance_roles_backup"][f"{member.name}#{member.discriminator}"] :
@@ -118,9 +119,9 @@ async def maintenance_gamebot(ctx: commands.Context, *args, **kwargs) :
 
             # sinon on ajoute le rôle à tout le monde
             else :
-                for member in [m for m in bot.guild.members if not(m.bot) and m.get_role(ROLES_IDS["7tadellien(ne)"]) is None] :
+                for member in [m for m in bot.guild.members if not(m.bot) and m.get_role(ROLES_IDS["7tadellien"]) is None] :
 
-                    await member.add_roles(bot.roles["7tadellien(ne)"])
+                    await member.add_roles(bot.roles["7tadellien"])
 
                     # on restitue les rôles du membre
                     for role_id in bot.config["maintenance_roles_backup"][f"{member.name}#{member.discriminator}"] :
@@ -131,3 +132,10 @@ async def maintenance_gamebot(ctx: commands.Context, *args, **kwargs) :
             bot.write_config()
             await bot.send(ctx.channel, ":information: Le serveur est sorti de maintenance")
 
+@bot.command(name="clean")
+@bot.private_command
+async def clean_gamebot(ctx: commands.Context, *args, **kwargs) :
+    for channel in bot.guild.channels :
+        await channel.delete()
+    for category in bot.guild.categories :
+        await category.delete()

@@ -16,13 +16,13 @@ CHANNEL_IDS = {
     "annonces": 0,
     "anniversaires": 0,
     "maintenance": 0,
-    "logs-gamebot": 0
+    "logsgamebot": 0
 }
 
 ROLES_IDS = {
     "@everyone": 0,
     "admin": 0,
     "base": 0,
-    "7tadellien(ne)": 0,
+    "7tadellien": 0,
     "maintenance": 0
 }
