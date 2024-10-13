@@ -1,4 +1,4 @@
-import json, calendar, logging, sys, re, shutil
+import json, calendar, logging, sys, re, shutil, copy
 from discord.ext import commands, tasks
 import datetime as dt
 
