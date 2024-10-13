@@ -66,6 +66,8 @@ async def on_ready():
                     bot.roles[role_name]: discord.PermissionOverwrite(read_messages=True, send_messages=False, create_instant_invite=False)
                 })).id
     bot.channels = {channel: bot.guild.get_channel(CHANNEL_IDS[channel]) for channel in CHANNEL_IDS}
+    for channel in bot.channels :
+        await bot.channels[channel].set_permissions(bot.guild.default_role, read_messages=True, send_messages=False, create_instant_invite=False)
 
     # on enregistre les identifiants
     with open(ids_filename, "wt") as f :
