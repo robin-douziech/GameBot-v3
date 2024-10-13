@@ -480,7 +480,7 @@ class GameBot(commands.Bot) :
             self.vars["events"][event_idstr]["invited_guests"].remove(f"{member.name}#{member.discriminator}")
             self.write_json("events")
 
-            (await self.get_all_messages_in_channel(self.channels[f"invitations_{event_idstr}"]))[-1].remove_reaction(chr(0x1F44D), member)
+            await (await self.get_all_messages_in_channel(self.channels[f"invitations_{event_idstr}"]))[-1].remove_reaction(chr(0x1F44D), member)
 
             await self.remove_permissions_on_channel(self.channels[f"invitations_{event_idstr}"], member)
 
@@ -499,7 +499,7 @@ class GameBot(commands.Bot) :
             self.vars["events"][event_idstr]["present_guests"].remove(f"{member.name}#{member.discriminator}")
             self.write_json("events")
 
-            (await self.get_all_messages_in_channel(self.channels[f"invitations_{event_idstr}"]))[-1].remove_reaction(chr(0x1F44D), member)
+            await (await self.get_all_messages_in_channel(self.channels[f"invitations_{event_idstr}"]))[-1].remove_reaction(chr(0x1F44D), member)
 
             await self.remove_permissions_on_channel(self.channels[f"invitations_{event_idstr}"], member)
             await self.remove_permissions_on_channel(self.channels[f"soirées_{event_idstr}"], member)
@@ -522,7 +522,7 @@ class GameBot(commands.Bot) :
             self.vars["events"][event_idstr]["waiting_guests"].remove(f"{member.name}#{member.discriminator}")
             self.write_json("events")
 
-            (await self.get_all_messages_in_channel(self.channels[f"invitations_{event_idstr}"]))[-1].remove_reaction(chr(0x1F44D), member)
+            await (await self.get_all_messages_in_channel(self.channels[f"invitations_{event_idstr}"]))[-1].remove_reaction(chr(0x1F44D), member)
 
             await self.remove_permissions_on_channel(self.channels[f"invitations_{event_idstr}"], member)
 
@@ -610,12 +610,12 @@ class GameBot(commands.Bot) :
                 if pseudo in self.vars["events"][event_idstr]["waiting_guests"] :
                     self.vars["events"][event_idstr]["waiting_guests"].remove(pseudo)
                     msg += f"Changement d'état pour '{member.display_name}' : liste d'attente --> pas invité (le rôle '{role.name}' n'est plus invité)\n"
-                    (await self.get_all_messages_in_channel(self.channels[f"invitations_{event_idstr}"]))[-1].remove_reaction(chr(0x1F44D), member)
+                    await (await self.get_all_messages_in_channel(self.channels[f"invitations_{event_idstr}"]))[-1].remove_reaction(chr(0x1F44D), member)
                     await self.send(member.dm_channel, f"Tu as été retiré(e) des personnes invitées à la soirée '{self.vars['events'][event_idstr]['name']}' car le rôle '{role.name}' n'est plus invité.")
                 if pseudo in self.vars["events"][event_idstr]["present_guests"] :
                     self.vars["events"][event_idstr]["present_guests"].remove(pseudo)
                     msg += f"Changement d'état pour '{member.display_name}' : présent --> pas invité (le rôle '{role.name}' n'est plus invité)\n"
-                    (await self.get_all_messages_in_channel(self.channels[f"invitations_{event_idstr}"]))[-1].remove_reaction(chr(0x1F44D), member)
+                    await (await self.get_all_messages_in_channel(self.channels[f"invitations_{event_idstr}"]))[-1].remove_reaction(chr(0x1F44D), member)
                     await self.send(member.dm_channel, f"Tu as été retiré(e) des personnes invitées à la soirée '{self.vars['events'][event_idstr]['name']}' car le rôle '{role.name}' n'est plus invité.")
                     await self.remove_permissions_on_channel(self.channels[f"soirées_{event_idstr}"], member)
             self.vars["events"][event_idstr]["invited_roles"].remove(role.id)
