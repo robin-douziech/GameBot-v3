@@ -438,9 +438,31 @@ class GameBot(commands.Bot) :
                     case _ :
                         pass
 
-    async def remove_members(self, pseudos: list[str]) :
+    async def remove_members(self, tup: list[tuple[str, int]]) :
         try :
-            for pseudo in pseudos :
+            for t in tup :
+                
+                pseudo, member_id = t
+
+                # on supprime toutes ses soirées
+                for event_idstr in [id for id in self.vars["events"] if id.split(':')[0] == pseudo] :
+                    await self.delete_event(event_idstr)
+
+                # on le désinvite des soirées auxquelles il est invité
+                for event_idstr in [id for id in self.vars["events"] if pseudo in self.vars["events"][id]["invited_guests"]
+                                                                                + self.vars["events"][id]["waiting_guests"]
+                                                                                + self.vars["events"][id]["present_guests"]] :
+                    if member_id in self.vars["events"][event_idstr]["invited_members"] :
+                        self.vars["events"][event_idstr]["invited_members"].remove(member_id)
+                    if pseudo in self.vars["events"][id]["invited_guests"] :
+                        self.vars["events"][id]["invited_guests"].remove(pseudo)
+                    elif pseudo in self.vars["events"][id]["waiting_guests"] :
+                        self.vars["events"][id]["waiting_guests"].remove(pseudo)
+                    elif pseudo in self.vars["events"][id]["present_guests"] :
+                        self.vars["events"][id]["present_guests"].remove(pseudo)
+                    self.write_json("events")
+
+                    await self.update_waiting_list(event_idstr)
 
                 if f"bot_{pseudo}" in self.channels :
                     await self.channels[f"bot_{pseudo}"].delete()

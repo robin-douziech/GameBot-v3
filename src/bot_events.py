@@ -110,12 +110,12 @@ async def on_ready():
         guild_members.append(f"{member.name}#{member.discriminator}")
         if member.dm_channel is None :
             await member.create_dm()
-    for member in guild_members :
-        if not(member in bot.vars["members"]) :
-            members_to_add.append(member)
-    for member in bot.vars["members"] :
-         if not(member in guild_members) :
-            members_to_remove.append(member)
+    for pseudo in guild_members :
+        if not(pseudo in bot.vars["members"]) :
+            members_to_add.append(pseudo)
+    for pseudo in bot.vars["members"] :
+         if not(pseudo in guild_members) :
+            members_to_remove.append((pseudo, bot.get_discord_member(pseudo).id))
     await bot.add_members(members_to_add)
     await bot.remove_members(members_to_remove)
 
@@ -299,13 +299,13 @@ async def on_message(message: discord.Message) :
 async def on_member_join(member: discord.Member) :
     pseudo = f"{member.name}#{member.discriminator}"
     if member in bot.guild.members and not(pseudo in bot.vars["members"]) :
-        await bot.add_members([member])
+        await bot.add_members([pseudo])
 
 @bot.event
 async def on_member_remove(member: discord.Member) :
     pseudo = f"{member.name}#{member.discriminator}"
     if pseudo in bot.vars["members"] and not(member in bot.guild.members) :
-        await bot.remove_members([member])
+        await bot.remove_members([(pseudo, member.id)])
 
 @bot.event
 async def on_raw_reaction_add(payload: discord.RawReactionActionEvent) :
