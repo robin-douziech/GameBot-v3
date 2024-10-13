@@ -4,7 +4,7 @@ bot = GameBot()
 bot.remove_command("help")
 
 async def backup_roles(result_list: list[int], member: discord.Member, remove: bool = False) :
-    for role in [r for r in member.roles if not(r in [bot.roles[role_str] for role_str in ROLES_TO_IGNORE])] :
+    for role in [r for r in member.roles if not(r in [bot.roles[role_str] for role_str in ROLES_TO_IGNORE] + [bot.guild.default_role])] :
         result_list.append(role.id)
         if remove :
             await member.remove_roles(role)

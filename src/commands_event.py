@@ -25,6 +25,8 @@ async def event_gamebot(ctx: commands.Context, *args, **kwargs) :
                     bot.vars["events"][event_idstr]["invited_guests"] = []
                     bot.vars["events"][event_idstr]["waiting_guests"] = []
                     bot.vars["events"][event_idstr]["present_guests"] = []
+                    bot.vars["events"][event_idstr]["invited_members"] = []
+                    bot.vars["events"][event_idstr]["invited_roles"] = []
                     bot.vars["events"][event_idstr]["present_guests"].append(f"{author.name}#{author.discriminator}")
                     bot.vars["events"][event_idstr]["invited_members"].append(author.id)
 
@@ -99,6 +101,7 @@ async def invite_gamebot(ctx: commands.Context, *args, **kwargs) :
     if len(args) > 1 :
 
         event_idstr = f"{author.name}#{author.discriminator}:{args[0]}"
+        target = " ".join(args[1:])
         
         if event_idstr in bot.vars["events"] and bot.vars["events"][event_idstr]["created"] :
 
@@ -107,13 +110,14 @@ async def invite_gamebot(ctx: commands.Context, *args, **kwargs) :
                 member = bot.get_discord_member(pseudo)
                 if (args[1] == member.mention
                     or (re.match(r"^(\d+)$", args[1]) and int(args[1]) == member.id)
-                    or (args[1] == member.display_name and len([m.display_name for m in bot.guild.members if m.display_name == args[1]]) == 1)) and pseudo != event_idstr.split(':')[0] :
+                    or (target == member.display_name and len([m.display_name for m in bot.guild.members if m.display_name == target]) == 1)) :
                     if not(member.id in bot.vars["events"][event_idstr]["invited_members"]) :
                         try :
                             await bot.invite_member(event_idstr, member)
                             await bot.send(ctx.channel, f"Invitation à la soirée '{bot.vars['events'][event_idstr]['name']}' envoyée à {member.display_name}")
                         except Exception as e :
                             await bot.send(ctx.channel, f"Quelque chose s'est mal passé pendant l'invitation de {member.display_name}")
+                            raise Exception(e)
                     return
 
             # inviter un rôle
@@ -145,6 +149,8 @@ async def uninvite_gamebot(ctx: commands.Context, *args, **kwargs) :
     if len(args) > 1 :
         
         event_idstr = f"{author.name}#{author.discriminator}:{args[0]}"
+        host = bot.get_discord_member(event_idstr.split(':')[0])
+        target = " ".join(args[1:])
 
         if event_idstr in bot.vars["events"] and bot.vars["events"][event_idstr]["created"] :
 
@@ -153,25 +159,26 @@ async def uninvite_gamebot(ctx: commands.Context, *args, **kwargs) :
                 member = bot.get_discord_member(pseudo)
                 if (args[1] == member.mention
                     or (re.match(r"^(\d+)$", args[1]) and int(args[1]) == member.id)
-                    or (args[1] == member.display_name and len([m.display_name for m in bot.guild.members if m.display_name == args[1]]) == 1)) :
-                    if (member.id in bot.vars["events"][event_idstr]["invited_members"]) :
+                    or (target == member.display_name and len([m.display_name for m in bot.guild.members if m.display_name == target]) == 1)) :
+                    if (member.id in bot.vars["events"][event_idstr]["invited_members"]) and member != host :
                         try :
                             await bot.uninvite_member(event_idstr, member)
                             await bot.send(ctx.channel, f"Invitation à la soirée '{bot.vars['events'][event_idstr]['name']}' annulée pour {member.display_name}")
                         except Exception as e :
                             await bot.send(ctx.channel, f"Quelque chose s'est mal passé pendant l'annulation de l'invitation de {member.display_name}")
+                            raise Exception(e)
                     return
 
             # désinviter un rôle
             for role in bot.guild.roles :
                 if args[1] == role.mention :
-
                     if (role.id in bot.vars["events"][event_idstr]["invited_roles"]) :
                         try :
                             await bot.uninvite_role(event_idstr, role)
                             await bot.send(ctx.channel, f"Les membres ayant le rôle {role.name} et n'ayant pas été invité autrement que via ce rôle ont été désinvité")
                         except Exception as e :
                             await bot.send(ctx.channel, f"Quelque chose s'est mal passé pendant l'annulation de l'invitation du rôle {role.name}")
+                            raise Exception(e)
                     return
                 
             await bot.send(ctx.channel, f"Mauvaise utilisation de la commande. Utilise \"!help uninvite\" pour savoir comment utiliser cette commande")

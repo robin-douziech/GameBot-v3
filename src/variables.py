@@ -10,13 +10,12 @@ else :
 
 DISCORD_MAX_MESSAGE_LENGTH = 2000
 
-ROLES_TO_IGNORE = ["base", "7tadellien", "maintenance", "@everyone", "admin"]
+ROLES_TO_IGNORE = ["base", "7tadellien", "maintenance", "admin"]
 CHANNELS_BY_ROLE = {
     "base": ["bienvenue", "informations", "rules"],
     "7tadellien": ["annonces", "anniversaires"],
     "maintenance": ["maintenance"],
-    "admin": ["logsgamebot"],
-    "@everyone": []
+    "admin": ["logsgamebot"]
 }
 
 BOT_VARS_DEFAULTS = {
