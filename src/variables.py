@@ -24,6 +24,7 @@ BOT_VARS_DEFAULTS = {
         'questionned': '',
         'questions': [],
         'object_id': 0,
+        'banned': False,
         'birthday': "0"
     },
     "roles": {},
@@ -53,6 +54,7 @@ BOT_VARS_DEFAULTS = {
         "logs_retention_period": "1 month",
         "rules": True,
         "maintenance": "down",
+        "ban_roles_backup": {},
         "maintenance_roles_backup": {},
         "rules_roles_backup": {}
     }

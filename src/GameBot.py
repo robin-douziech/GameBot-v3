@@ -152,7 +152,7 @@ class GameBot(commands.Bot) :
 
     async def create_command_channel_for_member(self, member: discord.Member) :
         """Create the member's command channel with appropriate permissions (depending on maintenance status and rules acceptation)"""
-        permissions = self.config["maintenance"] == "down" and (self.channels["rules"] is None or member in self.members_having_accepted_rules)
+        permissions = self.config["maintenance"] == "down" and (self.channels["rules"] is None or member in self.members_having_accepted_rules) and not(self.vars["members"][f"{member.name}#{member.discriminator}"]["banned"])
         member_permissions = {
             "read_messages": permissions,
             "send_messages": permissions,
@@ -336,6 +336,7 @@ class GameBot(commands.Bot) :
     def member_is_invited_to_event(self, event_idstr: str, member: discord.Member) :
         return (any([role_id in self.vars["events"][event_idstr]["invited_roles"]
                      for role_id in [role.id for role in member.roles]
+                                    + self.config["ban_roles_backup"][f"{member.name}#{member.discriminator}"]
                                     + self.config["maintenance_roles_backup"][f"{member.name}#{member.discriminator}"]
                                     + self.config["rules_roles_backup"][f"{member.name}#{member.discriminator}"]])
                 or member.id in self.vars["events"][event_idstr]["invited_members"])
@@ -617,7 +618,7 @@ class GameBot(commands.Bot) :
 
                 # on ajuste les permissions du salon de logs
                 host = self.get_discord_member(event_idstr.split(':')[0])
-                host_can_see_channels = members_can_see_channels and (self.channels["rules"] is None or host in self.members_having_accepted_rules)
+                host_can_see_channels = members_can_see_channels and (self.channels["rules"] is None or host in self.members_having_accepted_rules) and not(self.vars["members"][f"{host.name}#{host.discriminator}"]["banned"])
                 if host_can_see_channels :
                     await self.channels[f"logs_{event_idstr}"].set_permissions(host, **EVENT_CHANNEL_PERMISSIONS["logs"])
                 else :
@@ -628,7 +629,7 @@ class GameBot(commands.Bot) :
                     
                     member = self.guild.get_member(member_id)
                     pseudo = f"{member.name}#{member.discriminator}"
-                    can_see_channels = members_can_see_channels and (self.channels["rules"] is None or member in self.members_having_accepted_rules)
+                    can_see_channels = members_can_see_channels and (self.channels["rules"] is None or member in self.members_having_accepted_rules) and not(self.vars["members"][pseudo]["banned"])
 
                     # on ajuste les permissions du salon d'invitation
                     if can_see_channels :
@@ -646,7 +647,7 @@ class GameBot(commands.Bot) :
         else : # on anctualise les permissions des salons pour le membre renseigné
 
             pseudo = f"{member.name}#{member.discriminator}"
-            can_see_channels = members_can_see_channels and (self.channels["rules"] is None or member in self.members_having_accepted_rules)
+            can_see_channels = members_can_see_channels and (self.channels["rules"] is None or member in self.members_having_accepted_rules) and not(self.vars["members"][pseudo]["banned"])
 
             for event_idstr in self.vars["events"] :
 
