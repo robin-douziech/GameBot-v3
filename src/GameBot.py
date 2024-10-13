@@ -368,8 +368,7 @@ class GameBot(commands.Bot) :
                         if self.answer_is_valid(author, message.content) :
 
                             # Si c'était le seul à avoir cette date d'anniversaire, on la retire de self.birthday_datetimes
-                            if not(self.vars["members"][f"{author.name}#{author.discriminator}"]["birthday"] in [self.vars["members"][member]["birthday"] for member in self.vars["members"] if member != f"{author.name}#{author.discriminator}"]) :
-                                self.birthday_datetimes.remove(self.vars["members"][f"{author.name}#{author.discriminator}"]["birthday"])
+                            self.birthday_datetimes = [birthday_datetime[:5]+birthday_datetime[-6:] for birthday_datetime in [self.vars["members"][pseudo]["birthday"] for pseudo in self.vars["members"] if self.vars["members"][pseudo]["birthday"] != "0" and pseudo != f"{author.name}#{author.discriminator}"]]
 
                             # Selon le format du message reçu, on adapte la valeur stockée (on ajoute 00:00 si l'heure n'est pas précisée) et le message de confirmation
                             birthday = ""
@@ -390,8 +389,8 @@ class GameBot(commands.Bot) :
                                 birthday = message.content
                                 response = f"J'annoncerai ton anniversaire dans le salon #anniversaires le {m.group('date')} à{m.group('time')} en précisant ton âge"
                             self.vars["members"][f"{author.name}#{author.discriminator}"]["birthday"] = birthday
-                            if birthday != "0" and not(birthday in self.birthday_datetimes):
-                                self.birthday_datetimes.append(birthday)
+                            if birthday != "0" :
+                                self.birthday_datetimes = list(set(self.birthday_datetimes + [f"{birthday[:5]} {birthday[-5:]}"]))
                             self.write_json("members")
 
                             await self.send(message.channel, response)

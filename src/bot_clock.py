@@ -10,7 +10,8 @@ async def clock() :
         for member in bot.vars["members"] :
             discord_member = bot.get_discord_member(member)
             m = re.match(CREATION_QUESTIONS["birthday"]["date"]["valid"], bot.vars["members"][member]["birthday"])
-            age = f"Cette personne agée a {int(f'20{year}') - int(m.group('year')[1:])} ans" if m.group('year') is not None else ""
+            age = f"C'est pas tous les jours qu'on a {int(f'20{year}') - int(m.group('year')[1:])} ans !!!" if m.group('year') is not None else ""
+
             if f"{day}/{month} {hours}:{minutes}" == f"{m.group('date')}{m.group('time')}" :
                 await bot.send(bot.channels["anniversaires"], MESSAGES["anniversaires"].format(member_mention=discord_member.mention, age=age))
 
