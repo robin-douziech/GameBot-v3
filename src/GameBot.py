@@ -85,7 +85,9 @@ class GameBot(commands.Bot) :
             self.write_json("events")
 
             # on lui donne accès au salon de la soirée
-            await self.channels[f"soirées_{event_idstr}"].set_permissions(member, **EVENT_CHANNEL_PERMISSIONS["soirées"])
+            overwrite = copy.deepcopy(self.overwrites_none)
+            overwrite.update(**EVENT_CHANNEL_PERMISSIONS["soirées"])
+            await self.channels[f"soirées_{event_idstr}"].set_permissions(member, overwrite=overwrite)
 
             await self.send(member.dm_channel, f"Tu es sorti(e) de la liste d'attente pour la soirée '{self.vars['events'][event_idstr]['name']}'. Tu fais donc maintenant partie des personnes qui seront présentes à cette soirée et tu as accès au salon {self.channels[f'soirées_{event_idstr}'].mention}. Tu peux toujours annuler ta venue à cette soirée en retirant ta réaction au message d'invitation ici {self.channels[f'invitations_{event_idstr}'].mention}")
             await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : liste d'attente --> présent(e)")
@@ -162,12 +164,14 @@ class GameBot(commands.Bot) :
             "send_messages": permissions,
             "create_instant_invite": False
         }
+        overwrites = copy.deepcopy(self.overwrites_none)
+        overwrites.update(**member_permissions)
         self.channels[f"bot_{member.name}#{member.discriminator}"] = await self.guild.create_text_channel(
             name="utilise-gamebot-ici",
             category=self.categories["bot"],
             topic=f"{member.name}#{member.discriminator}",
             overwrites={
-                member: discord.PermissionOverwrite(**member_permissions),
+                member: overwrites,
                 self.guild.default_role: self.overwrites_none
             }
         )
@@ -289,7 +293,9 @@ class GameBot(commands.Bot) :
             self.write_json("events")
 
             # on lui donne accès au salon d'invitation
-            await self.channels[f"invitations_{event_idstr}"].set_permissions(member, **EVENT_CHANNEL_PERMISSIONS["invitations"])
+            overwrite = copy.deepcopy(self.overwrites_none)
+            overwrite.update(**EVENT_CHANNEL_PERMISSIONS["invitations"])
+            await self.channels[f"invitations_{event_idstr}"].set_permissions(member, overwrite=overwrite)
 
             if len(msg) > 0 :
                 await self.send(self.channels[f"logs_{event_idstr}"], msg)
@@ -312,7 +318,9 @@ class GameBot(commands.Bot) :
             self.write_json("events")
 
             # on donne accès au salon d'invitation au rôle
-            await self.channels[f"invitations_{event_idstr}"].set_permissions(role, **EVENT_CHANNEL_PERMISSIONS["invitations"])
+            overwrite = copy.deepcopy(self.overwrites_none)
+            overwrite.update(**EVENT_CHANNEL_PERMISSIONS["invitations"])
+            await self.channels[f"invitations_{event_idstr}"].set_permissions(role, overwrite=overwrite)
             
             if len(msg) > 0 :
                 await self.send(self.channels[f"logs_{event_idstr}"], msg)
@@ -653,7 +661,9 @@ class GameBot(commands.Bot) :
                 host = self.get_discord_member(event_idstr.split(':')[0])
                 host_can_see_channels = members_can_see_channels and (self.channels["rules"] is None or host in self.members_having_accepted_rules) and not(self.vars["members"][f"{host.name}#{host.discriminator}"]["banned"])
                 if host_can_see_channels :
-                    await self.channels[f"logs_{event_idstr}"].set_permissions(host, **EVENT_CHANNEL_PERMISSIONS["logs"])
+                    overwrite = copy.deepcopy(self.overwrites_none)
+                    overwrite.update(**EVENT_CHANNEL_PERMISSIONS["logs"])
+                    await self.channels[f"logs_{event_idstr}"].set_permissions(host, overwrite=overwrite)
                 else :
                     await self.remove_permissions_on_channel(self.channels[f"logs_{event_idstr}"], host)
 
@@ -666,14 +676,18 @@ class GameBot(commands.Bot) :
 
                     # on ajuste les permissions du salon d'invitation
                     if can_see_channels :
-                        await self.channels[f"invitations_{event_idstr}"].set_permissions(member, **EVENT_CHANNEL_PERMISSIONS["invitations"])
+                        overwrite = copy.deepcopy(self.overwrites_none)
+                        overwrite.update(**EVENT_CHANNEL_PERMISSIONS["invitations"])
+                        await self.channels[f"invitations_{event_idstr}"].set_permissions(member, overwrite=overwrite)
                     else :
                         await self.remove_permissions_on_channel(self.channels[f"invitations_{event_idstr}"], member)
                     
                     # on ajuste les permissions du salon de la soirée
                     if pseudo in self.vars["events"][event_idstr]["present_guests"] :
                         if can_see_channels :
-                            await self.channels[f"soirées_{event_idstr}"].set_permissions(member, **EVENT_CHANNEL_PERMISSIONS["soirées"])
+                            overwrite = copy.deepcopy(self.overwrites_none)
+                            overwrite.update(**EVENT_CHANNEL_PERMISSIONS["soirées"])
+                            await self.channels[f"soirées_{event_idstr}"].set_permissions(member, overwrite=overwrite)
                         else :
                             await self.remove_permissions_on_channel(self.channels[f"soirées_{event_idstr}"], member)
 
@@ -687,7 +701,9 @@ class GameBot(commands.Bot) :
                 # si le membre est l'hôte de la soirée
                 if pseudo == event_idstr.split(':')[0] :
                     if can_see_channels :
-                        await self.channels[f"logs_{event_idstr}"].set_permissions(member, **EVENT_CHANNEL_PERMISSIONS["logs"])
+                        overwrite = copy.deepcopy(self.overwrites_none)
+                        overwrite.update(**EVENT_CHANNEL_PERMISSIONS["logs"])
+                        await self.channels[f"logs_{event_idstr}"].set_permissions(member, overwrite=overwrite)
                     else :
                         await self.remove_permissions_on_channel(self.channels[f"logs_{event_idstr}"], member)
 
@@ -695,14 +711,18 @@ class GameBot(commands.Bot) :
                 if member.id in self.vars["events"][event_idstr]["invited_members"] :
 
                     if can_see_channels :
-                        await self.channels[f"invitations_{event_idstr}"].set_permissions(member, **EVENT_CHANNEL_PERMISSIONS["invitations"])
+                        overwrite = copy.deepcopy(self.overwrites_none)
+                        overwrite.update(**EVENT_CHANNEL_PERMISSIONS["invitations"])
+                        await self.channels[f"invitations_{event_idstr}"].set_permissions(member, overwrite=overwrite)
                     else :
                         await self.remove_permissions_on_channel(self.channels[f"invitations_{event_idstr}"], member)
 
                     # si le membre est présent à la soirée
                     if pseudo in self.vars["events"][event_idstr]["present_guests"] :
                         if can_see_channels :
-                            await self.channels[f"soirées_{event_idstr}"].set_permissions(member, **EVENT_CHANNEL_PERMISSIONS["soirées"])
+                            overwrite = copy.deepcopy(self.overwrites_none)
+                            overwrite.update(**EVENT_CHANNEL_PERMISSIONS["soirées"])
+                            await self.channels[f"soirées_{event_idstr}"].set_permissions(member, overwrite=overwrite)
                         else :
                             await self.remove_permissions_on_channel(self.channels[f"soirées_{event_idstr}"], member)
 

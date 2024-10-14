@@ -337,13 +337,24 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent) :
             if payload.emoji.name == chr(0x1F4DD) :
                 bot.members_having_accepted_rules.append(author)
                 if not(bot.vars["members"][f"{author.name}#{author.discriminator}"]["banned"]) :
+
                     await bot.update_permissions_on_event_channels(member=author)
-                    await bot.channels[f"bot_{author.name}#{author.discriminator}"].set_permissions(author, read_messages=True, send_messages=True, create_instant_invite=False)
+
+                    overwrites = copy.deepcopy(bot.overwrites_none)
+                    overwrites.update(
+                        read_messages=True,
+                        send_messages=True,
+                        create_instant_invite=False
+                    )
+                    await bot.channels[f"bot_{author.name}#{author.discriminator}"].set_permissions(author, overwrite=overwrites)
+
                     await author.add_roles(bot.roles["7tadellien"])
+
                     for role_id in bot.config["rules_roles_backup"][f"{author.name}#{author.discriminator}"] :
                         await author.add_roles(bot.guild.get_role(role_id))
                     bot.config["rules_roles_backup"][f"{author.name}#{author.discriminator}"] = []
                     bot.write_config()
+                    
             elif payload.emoji.name != chr(0x270B) :
                 await message.remove_reaction(payload.emoji, author)
             return
