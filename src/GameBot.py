@@ -31,6 +31,10 @@ class GameBot(commands.Bot) :
         self.config_filename = "json/config.json"
         self.config = {}
 
+        self.overwrites_none = discord.PermissionOverwrite()
+        for perm in discord.Permissions() :
+            setattr(self.overwrites_none, perm[0], False)
+
         self.vars = {
             'members': {},
             'roles': {},
@@ -164,7 +168,7 @@ class GameBot(commands.Bot) :
             topic=f"{member.name}#{member.discriminator}",
             overwrites={
                 member: discord.PermissionOverwrite(**member_permissions),
-                self.guild.default_role: discord.PermissionOverwrite(read_messages=False, send_messages=False, create_instant_invite=False)
+                self.guild.default_role: self.overwrites_none
             }
         )
     

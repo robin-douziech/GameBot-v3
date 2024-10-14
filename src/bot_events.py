@@ -51,7 +51,6 @@ async def on_ready():
     perm = discord.Permissions.none()
     perm.administrator = True
     await bot.roles["admin"].edit(permissions=perm)
-    await bot.guild.get_member(BOT_OWNER_ID).add_roles(bot.roles["admin"])
 
     # création ou récupération des catégories
     for category_name in CATEGORY_IDS :
@@ -63,23 +62,22 @@ async def on_ready():
 
     # création ou récupération des salons
     bot.channels = {}
-    overwrite_none = discord.PermissionOverwrite()
-    for perm in discord.Permissions() :
-        setattr(overwrite_none, perm[0], False)
-    overwrite = copy.deepcopy(overwrite_none)
-    overwrite.read_messages = True
-    overwrite.add_reactions = True
-    overwrite.read_message_history = True
+    overwrite = copy.deepcopy(bot.overwrites_none)
+    overwrite.update(
+        read_messages = True,
+        add_reactions = True,
+        read_message_history = True
+    )
     for role_name in ROLES_IDS :
         for channel_name in CHANNELS_BY_ROLE[role_name] :
             if ((bot.config["rules"] or channel_name != "rules") and bot.guild.get_channel(CHANNEL_IDS[channel_name]) is None) :
                 CHANNEL_IDS[channel_name] = (await bot.guild.create_text_channel(channel_name, overwrites={
-                    bot.guild.default_role: overwrite_none,
-                    bot.roles[role_name]: overwrite
+                    bot.roles[role_name]: overwrite,
+                    bot.guild.default_role: bot.overwrites_none
                 })).id
             elif (bot.config["rules"] or channel_name != "rules")  :
-                await bot.guild.get_channel(CHANNEL_IDS[channel_name]).set_permissions(bot.guild.default_role, overwrite=overwrite_none)
                 await bot.guild.get_channel(CHANNEL_IDS[channel_name]).set_permissions(bot.roles[role_name], overwrite=overwrite)
+                await bot.guild.get_channel(CHANNEL_IDS[channel_name]).set_permissions(bot.guild.default_role, overwrite=bot.overwrites_none)
     bot.channels = {channel: bot.guild.get_channel(CHANNEL_IDS[channel]) for channel in CHANNEL_IDS}
 
     # on enregistre les identifiants
@@ -232,6 +230,8 @@ async def on_ready():
 
     # gestion des permissions sur les salons des soirées
     await bot.update_permissions_on_event_channels()
+
+    await bot.guild.get_member(BOT_OWNER_ID).add_roles(bot.roles["admin"])
     
     # on vérifie que les membres invités aux soirée le sont vraiment
     # (ils pourraient ne plus l'être si un rôle leur a été supprimé

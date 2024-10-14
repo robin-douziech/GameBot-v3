@@ -34,7 +34,7 @@ async def event_gamebot(ctx: commands.Context, *args, **kwargs) :
                     for string in ["invitations", "soirées", "logs"] :
                         channel = await bot.guild.create_text_channel(event_idstr, category=bot.categories[string], overwrites={
                             author: discord.PermissionOverwrite(**EVENT_CHANNEL_PERMISSIONS[string]),
-                            bot.guild.default_role: discord.PermissionOverwrite(read_messages=False, send_messages=False, create_instant_invite=False)
+                            bot.guild.default_role: bot.overwrites_none
                         })
                         bot.channels[f"{string}_{event_idstr}"] = channel
                         bot.vars["events"][event_idstr][f"{string}_channel_id"] = channel.id
