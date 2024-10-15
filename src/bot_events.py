@@ -456,9 +456,6 @@ async def on_member_update(before: discord.Member, after: discord.Member) :
         # ajout de rôle
         for role in [r for r in after.roles if not(r in before.roles)] :
 
-            print(role.name)
-            print(bot.config)
-
             # si le membre est "banned", on ajoute l'id du rôle à la backup et on supprime le rôle
             if bot.vars["members"][f"{after.name}#{after.discriminator}"]["banned"] :
                 if not(role.id in bot.config["ban_roles_backup"][f"{after.name}#{after.discriminator}"]) :
@@ -495,4 +492,3 @@ async def on_error(event_method, *args, **kwargs):
     info = sys.exc_info()
     bot.log(f"error type : {info[0]}\nerror value :{info[1]}\nerror traceback : {str(info[2])}\n", 'error')
     await bot.send(bot.owner.dm_channel, f"error type : {info[0]}\nerror value :{info[1]}\nerror traceback : {str(info[2])}\n", wrappers=('```', '```'))
-    traceback.print_exc()
