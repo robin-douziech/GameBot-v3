@@ -90,7 +90,28 @@ Voici une présentation des différentes catégories du serveur :
 - Quand quelqu'un t'invite à une soirée, tu vera apparaître un salon dans la catégorie #invitations avec un message auquel tu pourras réagir pour accepter l'invitation ou non
 - Si tu acceptes une invitation, tu auras accès à un salon dans la catégorie #soirées
 """,
-    "rules": """Ici c'est les règles, t'as intérêt à les respecter""",
+    "rules": """# :scroll: Règles du serveur
+
+Afin que chacun puisse avoir une expérience de ce serveur la plus agréable possible, il est nécessaire que chaque membre de celui-ci accepte les règles suivantes :
+
+:straight_ruler: __Règle n°1__ : Chaque membre du serveur doit être respectueux dans ses messages.
+
+:straight_ruler: __Règle n°2__ : Évitez aussi les sujets potentiellement sensibles. Ce serveur a pour objectif de rassembler \
+des amis et de leur faire passer des moments agréables, pas provoquer des situations désagréables par le biais de discussions \
+que certains ne souhaitent pas avoir ici. Si toutefois certains d'entre vous souhaitent débattre de quelque sujet que ce soit \
+(dans le respect de la règle n°1), j'ai mis à disposition un salon dédié à cela dans lequel cette deuxième règle ne s'applique \
+pas.
+
+:straight_ruler: __Règle n°3__ : Être gentil
+
+:straight_ruler: __Règle n°4__ : Ne pas être méchant
+
+(Ceux qui ont la ref des deux dernières règles levez la main :raised_hand:)
+
+Veuillez signer (:pencil:) ce message pour avoir accès au reste du serveur
+
+Des bisous et à bientôt lors d'une soirée jeux :heart:
+""",
     "maintenance": """Le serveur est temporairement indisponible pour cause de maintenance. Je ne sais pas exactement ce que fait {owner_mention}, il ajoute peut-être des salon ou me met à jour, qui sait ?\
 J'espère que cela ne durera pas trop longtemps, veuillez nous excuser pour la gêne occasionnée.""",
     "anniversaires": """# JOYEUX ANNIVERSAAAAAAAAAIRE {member_mention} !!! ET SURTOUT PASSE UNE BONNE JOURNÉÉÉÉÉÉÉÉÉE !!! {age} :birthday: :tada: :tada: :tada: :tada: :tada: :tada: :tada: :tada: :tada:""",
