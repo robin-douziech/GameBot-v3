@@ -137,7 +137,8 @@ async def maintenance_gamebot(ctx: commands.Context, *args, **kwargs) :
                 overwrite.update(
                     read_messages=True,
                     send_messages=True,
-                    create_instant_invite=False
+                    mention_everyone=True,
+                    read_message_history=True
                 )
                 await bot.channels[f"bot_{member.name}#{member.discriminator}"].set_permissions(member, overwrite=overwrite)
 
@@ -214,7 +215,9 @@ async def unban_gamebot(ctx: commands.Context, *args, **kwargs) :
                             overwrite = copy.deepcopy(bot.overwrites_none)
                             overwrite.update(
                                 read_messages=True,
-                                send_messages=True
+                                send_messages=True,
+                                mention_everyone=True,
+                                read_message_history=True
                             )
                             await bot.channels[f"bot_{pseudo}"].set_permissions(member, overwrite=overwrite)
 
@@ -247,3 +250,33 @@ async def unban_gamebot(ctx: commands.Context, *args, **kwargs) :
                     bot.write_config()
 
                     return
+                
+@bot.command(name="clean")
+@bot.private_command
+@bot.admin_command
+async def clean_gamebot(ctx: commands.Context) :
+
+    if os.getenv("ENV") == "TEST" :
+
+        bot.vars["members"] = {}
+        bot.vars["events"] = {}
+        bot.config["ban_roles_backup"] = {}
+        bot.config["maintenance_roles_backup"] = {}
+        bot.config["rules_roles_backup"] = {}
+
+        bot.write_json("members")
+        bot.write_json("events")
+        bot.write_config()
+
+        for channel in bot.guild.channels :
+            await channel.delete()
+
+        for category in bot.guild.categories :
+
+            for channel in category.channels :
+                await channel.delete()
+
+            await category.delete()
+
+        for role in [r for r in bot.guild.roles if r.id != 1288223534627160220 and r != bot.guild.default_role] :
+            await role.delete()

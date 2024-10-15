@@ -34,10 +34,10 @@ async def on_ready():
             for role_name in [name for name in ids['ROLES_IDS'] if ids['ROLES_IDS'][name] != 0] :
                 ROLES_IDS[role_name] = ids['ROLES_IDS'][role_name]
 
-    # propriétaire du bot
+    # serveur du bot
     bot.guild = bot.get_guild(BOT_GUILD_ID)
 
-    # serveur du bot
+    # propriétaire du bot
     bot.owner = bot.guild.get_member(BOT_OWNER_ID)
 
     # création ou récupération des rôles
@@ -70,14 +70,15 @@ async def on_ready():
     )
     for role_name in ROLES_IDS :
         for channel_name in CHANNELS_BY_ROLE[role_name] :
-            if ((bot.config["rules"] or channel_name != "rules") and bot.guild.get_channel(CHANNEL_IDS[channel_name]) is None) :
-                CHANNEL_IDS[channel_name] = (await bot.guild.create_text_channel(channel_name, overwrites={
-                    bot.roles[role_name]: overwrite,
-                    bot.guild.default_role: bot.overwrites_none
-                })).id
-            elif (bot.config["rules"] or channel_name != "rules")  :
-                await bot.guild.get_channel(CHANNEL_IDS[channel_name]).set_permissions(bot.roles[role_name], overwrite=overwrite)
-                await bot.guild.get_channel(CHANNEL_IDS[channel_name]).set_permissions(bot.guild.default_role, overwrite=bot.overwrites_none)
+            if ((bot.config["rules"] or channel_name != "rules")) :
+                if (bot.guild.get_channel(CHANNEL_IDS[channel_name]) is None) :
+                    CHANNEL_IDS[channel_name] = (await bot.guild.create_text_channel(channel_name, overwrites={
+                        bot.roles[role_name]: overwrite,
+                        bot.guild.default_role: bot.overwrites_none
+                    })).id
+                else :
+                    await bot.guild.get_channel(CHANNEL_IDS[channel_name]).set_permissions(bot.roles[role_name], overwrite=overwrite)
+                    await bot.guild.get_channel(CHANNEL_IDS[channel_name]).set_permissions(bot.guild.default_role, overwrite=bot.overwrites_none)
     bot.channels = {channel: bot.guild.get_channel(CHANNEL_IDS[channel]) for channel in CHANNEL_IDS}
 
     # on enregistre les identifiants
@@ -115,26 +116,9 @@ async def on_ready():
     handler.setFormatter(formatter)
     logging.getLogger().handlers = [handler]
 
-    # on gère les membres du serveur
-    guild_members: list[str] = []
-    members_to_add: list[str] = []
-    members_to_remove: list[str] = []
-    for member in [m for m in bot.guild.members if not(m.bot)] :
-        guild_members.append(f"{member.name}#{member.discriminator}")
-        if member.dm_channel is None :
-            await member.create_dm()
-    for pseudo in guild_members :
-        if not(pseudo in bot.vars["members"]) :
-            members_to_add.append(pseudo)
-    for pseudo in bot.vars["members"] :
-         if not(pseudo in guild_members) :
-            members_to_remove.append((pseudo, bot.get_discord_member(pseudo).id))
-    await bot.add_members(members_to_add)
-    await bot.remove_members(members_to_remove)
-
-    bot.config["ban_roles_backup"] = {x: bot.config["ban_roles_backup"][x] if x in bot.config["ban_roles_backup"] else [] for x in bot.vars["members"]}
-    bot.config["maintenance_roles_backup"] = {x: bot.config["maintenance_roles_backup"][x] if x in bot.config["maintenance_roles_backup"] else [] for x in bot.vars["members"]}
-    bot.config["rules_roles_backup"] = {x: bot.config["rules_roles_backup"][x] if x in bot.config["rules_roles_backup"] else [] for x in bot.vars["members"]}
+    bot.config["ban_roles_backup"] = {f"{member.name}#{member.discriminator}": bot.config["ban_roles_backup"][f"{member.name}#{member.discriminator}"] if f"{member.name}#{member.discriminator}" in bot.config["ban_roles_backup"] else [] for member in [m for m in bot.guild.members if not(m.bot)]}
+    bot.config["maintenance_roles_backup"] = {f"{member.name}#{member.discriminator}": bot.config["maintenance_roles_backup"][f"{member.name}#{member.discriminator}"] if f"{member.name}#{member.discriminator}" in bot.config["maintenance_roles_backup"] else [] for member in [m for m in bot.guild.members if not(m.bot)]}
+    bot.config["rules_roles_backup"] = {f"{member.name}#{member.discriminator}": bot.config["rules_roles_backup"][f"{member.name}#{member.discriminator}"] if f"{member.name}#{member.discriminator}" in bot.config["rules_roles_backup"] else [] for member in [m for m in bot.guild.members if not(m.bot)]}
     bot.write_config()
 
     # MESSAGES PERMANENTS
@@ -161,6 +145,23 @@ async def on_ready():
         await bot.send(bot.channels["maintenance"], 'https://tenor.com/view/discord-gif-27684109')
         messages = await bot.send(bot.channels["maintenance"], MESSAGES["maintenance"].format(owner_mention=bot.owner.mention))
         bot.save_message("maintenance", [message.id for message in messages])
+
+    # on gère les membres du serveur
+    guild_members: list[str] = []
+    members_to_add: list[str] = []
+    members_to_remove: list[str] = []
+    for member in [m for m in bot.guild.members if not(m.bot)] :
+        guild_members.append(f"{member.name}#{member.discriminator}")
+        if member.dm_channel is None :
+            await member.create_dm()
+    for pseudo in guild_members :
+        if not(pseudo in bot.vars["members"]) :
+            members_to_add.append(pseudo)
+    for pseudo in bot.vars["members"] :
+         if not(pseudo in guild_members) :
+            members_to_remove.append(pseudo)
+    await bot.add_members(members_to_add)
+    await bot.remove_members(members_to_remove)
 
     # salon pour utiliser le bot
     for channel in bot.categories["bot"].channels :
@@ -291,6 +292,12 @@ async def on_ready():
         if bot.vars["members"][member]["birthday"] != "0" and not(bot.vars["members"][member]["birthday"] in bot.birthday_datetimes) :
             bot.birthday_datetimes.append(f"{m.group('date')}{m.group('time')}")
 
+    bot.log(f"bot.guild: {bot.guild}", "info")
+    bot.log(f"bot.owner: {bot.owner}", "info")
+    bot.log(f"bot.categories: {bot.categories}", "info")
+    bot.log(f"bot.channels: {bot.channels}", "info")
+    bot.log(f"bot.roles: {bot.roles}", "info")
+
     await bot.send(bot.channels["logsgamebot"], f"{bot.user.display_name} est prêt")
 
     clock.start()
@@ -299,14 +306,12 @@ async def on_ready():
 async def on_message(message: discord.Message) :
     author = bot.guild.get_member(message.author.id)
     if (not(author.bot)
+        and (bot.channels["rules"] is None or author in bot.members_having_accepted_rules)
         and (bot.config["maintenance"] == "down" or author.get_role(ROLES_IDS["admin"]) is not None)
         and not(bot.vars["members"][f"{author.name}#{author.discriminator}"]["banned"])) :
         if bot.config['maintenance'] == "down" or message.content == "!maintenance down" :
             if message.content.startswith(bot.command_prefix) :
-                if message.content[1:].split(' ')[0] in [c.name for c in bot.commands] :
-                    await bot.process_commands(message)
-                else :
-                    await bot.send(message.channel, "Je ne connais pas cette commande")
+                await bot.process_commands(message)
             elif message.channel == author.dm_channel or message.channel == bot.channels[f"bot_{author.name}#{author.discriminator}"] :
                 await bot.process_msg(message)
         else :
@@ -322,7 +327,7 @@ async def on_member_join(member: discord.Member) :
 async def on_member_remove(member: discord.Member) :
     pseudo = f"{member.name}#{member.discriminator}"
     if pseudo in bot.vars["members"] and not(member in bot.guild.members) :
-        await bot.remove_members([(pseudo, member.id)])
+        await bot.remove_members([pseudo])
 
 @bot.event
 async def on_raw_reaction_add(payload: discord.RawReactionActionEvent) :
@@ -338,17 +343,18 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent) :
                 bot.members_having_accepted_rules.append(author)
                 if not(bot.vars["members"][f"{author.name}#{author.discriminator}"]["banned"]) :
 
+                    await author.add_roles(bot.roles["7tadellien"])
+
                     await bot.update_permissions_on_event_channels(member=author)
 
                     overwrites = copy.deepcopy(bot.overwrites_none)
                     overwrites.update(
                         read_messages=True,
                         send_messages=True,
-                        create_instant_invite=False
+                        mention_everyone=True,
+                        read_message_history=True
                     )
                     await bot.channels[f"bot_{author.name}#{author.discriminator}"].set_permissions(author, overwrite=overwrites)
-
-                    await author.add_roles(bot.roles["7tadellien"])
 
                     for role_id in bot.config["rules_roles_backup"][f"{author.name}#{author.discriminator}"] :
                         await author.add_roles(bot.guild.get_role(role_id))
@@ -382,8 +388,8 @@ async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent) :
             if payload.emoji.name == chr(0x1F4DD) :
                 bot.members_having_accepted_rules.remove(author)
                 if not(bot.vars["members"][f"{author.name}#{author.discriminator}"]["banned"]) :
-                    await bot.update_permissions_on_event_channels(member=author)
                     await bot.remove_permissions_on_channel(bot.channels[f"bot_{author.name}#{author.discriminator}"], author)
+                    await bot.update_permissions_on_event_channels(member=author)
                     await author.remove_roles(bot.roles["7tadellien"])
                     await backup_roles(bot.config["rules_roles_backup"][f"{author.name}#{author.discriminator}"], author, remove=True)
                     bot.write_config()
@@ -409,8 +415,11 @@ async def on_member_update(before: discord.Member, after: discord.Member) :
         # suppression de rôle
         for role in [r for r in before.roles if not(r in after.roles)] :
 
-            if ((role.id == ROLES_IDS["base"] and bot.config["maintenance"] == "down")
-                or (role.id == ROLES_IDS["maintenance"] and bot.config["maintenance"] == "up")) :
+            bot.guild.get_role(ROLES_IDS["base"])
+            bot.guild.get_role(ROLES_IDS["maintenance"])
+
+            if ((bot.guild.get_role(ROLES_IDS["base"]) is not None and role.id == ROLES_IDS["base"] and bot.config["maintenance"] == "down")
+                or (bot.guild.get_role(ROLES_IDS["maintenance"]) is not None and role.id == ROLES_IDS["maintenance"] and bot.config["maintenance"] == "up")) :
                 await after.add_roles(role)
 
             # si le rôle était invité à une soirée, on désinvite le membre (uniquement s'il n'était invité que via ce rôle)
@@ -447,6 +456,9 @@ async def on_member_update(before: discord.Member, after: discord.Member) :
         # ajout de rôle
         for role in [r for r in after.roles if not(r in before.roles)] :
 
+            print(role.name)
+            print(bot.config)
+
             # si le membre est "banned", on ajoute l'id du rôle à la backup et on supprime le rôle
             if bot.vars["members"][f"{after.name}#{after.discriminator}"]["banned"] :
                 if not(role.id in bot.config["ban_roles_backup"][f"{after.name}#{after.discriminator}"]) :
@@ -478,3 +490,9 @@ async def on_member_update(before: discord.Member, after: discord.Member) :
 
         bot.write_json("members")
 
+@bot.event
+async def on_error(event_method, *args, **kwargs):
+    info = sys.exc_info()
+    bot.log(f"error type : {info[0]}\nerror value :{info[1]}\nerror traceback : {str(info[2])}\n", 'error')
+    await bot.send(bot.owner.dm_channel, f"error type : {info[0]}\nerror value :{info[1]}\nerror traceback : {str(info[2])}\n", wrappers=('```', '```'))
+    traceback.print_exc()

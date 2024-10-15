@@ -1,4 +1,4 @@
-import json, calendar, logging, sys, re, shutil, copy
+import json, calendar, logging, sys, re, shutil, copy, traceback
 from discord.ext import commands, tasks
 import datetime as dt
 
@@ -58,6 +58,10 @@ class GameBot(commands.Bot) :
 
             discord_member = self.get_discord_member(pseudo)
 
+            # on l'enregistre dans bot.vars["members"]
+            self.vars["members"][pseudo] = BOT_VARS_DEFAULTS["members"].copy()
+            self.vars["members"][pseudo]["id"] = discord_member.id
+
             # on lui ajoute le rôle "base"
             await discord_member.add_roles(self.roles["base"])
 
@@ -68,8 +72,6 @@ class GameBot(commands.Bot) :
             # on lui crée son salon de discussion avec le bot
             await self.create_command_channel_for_member(self.get_discord_member(pseudo))
 
-            # on l'enregistre dans bot.vars["members"]
-            self.vars["members"][pseudo] = BOT_VARS_DEFAULTS["members"]
             self.write_json("members")
 
     async def add_member_to_present_guests(self, event_idstr: str, member: discord.Member) :
@@ -162,7 +164,8 @@ class GameBot(commands.Bot) :
         member_permissions = {
             "read_messages": permissions,
             "send_messages": permissions,
-            "create_instant_invite": False
+            "mention_everyone": permissions,
+            "read_message_history": permissions
         }
         overwrites = copy.deepcopy(self.overwrites_none)
         overwrites.update(**member_permissions)
@@ -190,7 +193,8 @@ class GameBot(commands.Bot) :
                     for pseudo in self.vars["events"][event_idstr]["invited_guests"] \
                                 + self.vars["events"][event_idstr]["waiting_guests"] \
                                 + self.vars["events"][event_idstr]["present_guests"] :
-                        await self.send(self.get_discord_member(pseudo).dm_channel, f"**__ATTENTION__:** La soirée '{self.vars['events'][event_idstr]['name']}' a été supprimée")
+                        if self.get_discord_member(pseudo) is not None :
+                            await self.send(self.get_discord_member(pseudo).dm_channel, f"**__ATTENTION__:** La soirée '{self.vars['events'][event_idstr]['name']}' a été supprimée")
                     
                 # on supprime les salons
                 for string in ["invitations", "soirées", "logs"] :
@@ -449,11 +453,11 @@ class GameBot(commands.Bot) :
                     case _ :
                         pass
 
-    async def remove_members(self, tup: list[tuple[str, int]]) :
+    async def remove_members(self, pseudos: str) :
         try :
-            for t in tup :
-                
-                pseudo, member_id = t
+            for pseudo in pseudos :
+
+                member_id = self.vars["members"][pseudo]["id"]
 
                 # on supprime toutes ses soirées
                 for event_idstr in [id for id in self.vars["events"] if id.split(':')[0] == pseudo] :
@@ -465,15 +469,22 @@ class GameBot(commands.Bot) :
                                                                                 + self.vars["events"][id]["present_guests"]] :
                     if member_id in self.vars["events"][event_idstr]["invited_members"] :
                         self.vars["events"][event_idstr]["invited_members"].remove(member_id)
-                    if pseudo in self.vars["events"][id]["invited_guests"] :
-                        self.vars["events"][id]["invited_guests"].remove(pseudo)
-                    elif pseudo in self.vars["events"][id]["waiting_guests"] :
-                        self.vars["events"][id]["waiting_guests"].remove(pseudo)
-                    elif pseudo in self.vars["events"][id]["present_guests"] :
-                        self.vars["events"][id]["present_guests"].remove(pseudo)
+                    if pseudo in self.vars["events"][event_idstr]["invited_guests"] :
+                        self.vars["events"][event_idstr]["invited_guests"].remove(pseudo)
+                    elif pseudo in self.vars["events"][event_idstr]["waiting_guests"] :
+                        self.vars["events"][event_idstr]["waiting_guests"].remove(pseudo)
+                    elif pseudo in self.vars["events"][event_idstr]["present_guests"] :
+                        self.vars["events"][event_idstr]["present_guests"].remove(pseudo)
                     self.write_json("events")
-
                     await self.update_waiting_list(event_idstr)
+
+                # on supprime son salon privé avec le bot
+                await self.channels[f"bot_{pseudo}"].delete()
+
+                # on retire sa réaction du message des règles
+                async for user in self.rules_message.reactions[0].users() :
+                    if user.id == member_id :
+                        await self.rules_message.remove_reaction(chr(0x1F4DD), user)
 
                 if f"bot_{pseudo}" in self.channels :
                     await self.channels[f"bot_{pseudo}"].delete()
@@ -483,6 +494,7 @@ class GameBot(commands.Bot) :
                 self.write_json("members")
         except Exception as e :
             self.log(f"{e} (while trying to delete a member)", "error")
+            raise Exception(e)
 
     async def remove_member_from_invited_guests(self, event_idstr: str, member: discord.Member) :
 

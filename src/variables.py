@@ -63,18 +63,16 @@ BOT_VARS_DEFAULTS = {
 EVENT_CHANNEL_PERMISSIONS = {
     "invitations": {
         "read_messages": True,
-        "send_messages": False,
-        "create_instant_invite": False
+        "read_message_history": True
     },
     "soirées": {
         "read_messages": True,
         "send_messages": True,
-        "create_instant_invite": False
+        "read_message_history": True
     },
     "logs": {
         "read_messages": True,
-        "send_messages": False,
-        "create_instant_invite": False
+        "read_message_history": True
     },
 }
 
