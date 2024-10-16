@@ -9,6 +9,7 @@ else :
     from variables_test import *
 
 DISCORD_MAX_MESSAGE_LENGTH = 2000
+RETRY_TIMEOUT = 1
 
 ROLES_TO_IGNORE = ["base", "7tadellien", "maintenance", "admin"]
 CHANNELS_BY_ROLE = {

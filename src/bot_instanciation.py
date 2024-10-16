@@ -10,6 +10,18 @@ async def backup_roles(result_list: list[int], member: discord.Member, remove: b
             await member.remove_roles(role)
     return result_list
 
+def get_category_by_name(category_name: str) :
+    for category in bot.guild.categories :
+        if category.name == category_name :
+            return category
+    return None
+
+def get_channel_by_name(channel_name: str) :
+    for channel in bot.guild.channels :
+        if channel.name == channel_name :
+            return channel
+    return None
+
 def get_role_by_name(role_name: str) :
     for role in bot.guild.roles :
         if role.name == role_name :

@@ -44,9 +44,17 @@ async def on_ready():
     for role_name in ROLES_IDS :
         if bot.guild.get_role(ROLES_IDS[role_name]) is None :
             if not(role_name in [role.name for role in bot.guild.roles]) :
-                ROLES_IDS[role_name] = (await bot.guild.create_role(name=role_name)).id
+
+                role = await bot.guild.create_role(name=role_name)
+                while role is None :
+                    await asyncio.sleep(RETRY_TIMEOUT)
+                    role = await bot.guild.create_role(name=role_name)
+                ROLES_IDS[role_name] = role.id
+
             else :
+
                 ROLES_IDS[role_name] = get_role_by_name(role_name).id
+
     bot.roles = {role: bot.guild.get_role(ROLES_IDS[role]) for role in ROLES_IDS}
     perm = discord.Permissions.none()
     perm.administrator = True
@@ -55,9 +63,22 @@ async def on_ready():
     # création ou récupération des catégories
     for category_name in CATEGORY_IDS :
         if discord.utils.get(bot.guild.categories, id=CATEGORY_IDS[category_name]) is None :
-            CATEGORY_IDS[category_name] = (await bot.guild.create_category(name=category_name.upper(), overwrites={
-                bot.guild.default_role: discord.PermissionOverwrite(read_messages=False)
-            })).id
+            if not(category_name in [category.name for category in bot.guild.categories]) :
+
+                category = await bot.guild.create_category(name=category_name.upper(), overwrites={
+                    bot.guild.default_role: bot.overwrites_none
+                })
+                while category is None :
+                    await asyncio.sleep(RETRY_TIMEOUT)
+                    category = await bot.guild.create_category(name=category_name.upper(), overwrites={
+                        bot.guild.default_role: bot.overwrites_none
+                    })
+                CATEGORY_IDS[category_name] = category.id
+
+            else :
+
+                CATEGORY_IDS[category_name] = get_category_by_name(category_name).id
+
     bot.categories = {category: discord.utils.get(bot.guild.categories, id=CATEGORY_IDS[category]) for category in CATEGORY_IDS}
 
     # création ou récupération des salons
@@ -72,13 +93,31 @@ async def on_ready():
         for channel_name in CHANNELS_BY_ROLE[role_name] :
             if ((bot.config["rules"] or channel_name != "rules")) :
                 if (bot.guild.get_channel(CHANNEL_IDS[channel_name]) is None) :
-                    CHANNEL_IDS[channel_name] = (await bot.guild.create_text_channel(channel_name, overwrites={
-                        bot.roles[role_name]: overwrite,
-                        bot.guild.default_role: bot.overwrites_none
-                    })).id
+                    if not(channel_name in [channel.name for channel in bot.guild.channels]) :
+
+                        channel = await bot.guild.create_text_channel(channel_name, overwrites={
+                            bot.roles[role_name]: overwrite,
+                            bot.guild.default_role: bot.overwrites_none
+                        })
+                        while channel is None :
+                            await asyncio.sleep(RETRY_TIMEOUT)
+                            channel = await bot.guild.create_text_channel(channel_name, overwrites={
+                                bot.roles[role_name]: overwrite,
+                                bot.guild.default_role: bot.overwrites_none
+                            })
+                            CHANNEL_IDS[channel_name] = channel.id
+
+                    else :
+
+                        CHANNEL_IDS[channel_name] = get_channel_by_name(channel_name).id
+                        await bot.guild.get_channel(CHANNEL_IDS[channel_name]).set_permissions(bot.roles[role_name], overwrite=overwrite)
+                        await bot.guild.get_channel(CHANNEL_IDS[channel_name]).set_permissions(bot.guild.default_role, overwrite=bot.overwrites_none)
+
                 else :
+
                     await bot.guild.get_channel(CHANNEL_IDS[channel_name]).set_permissions(bot.roles[role_name], overwrite=overwrite)
                     await bot.guild.get_channel(CHANNEL_IDS[channel_name]).set_permissions(bot.guild.default_role, overwrite=bot.overwrites_none)
+
     bot.channels = {channel: bot.guild.get_channel(CHANNEL_IDS[channel]) for channel in CHANNEL_IDS}
 
     # on enregistre les identifiants
