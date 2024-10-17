@@ -86,7 +86,6 @@ async def on_ready():
     overwrite = copy.deepcopy(bot.overwrites_none)
     overwrite.update(
         read_messages = True,
-        add_reactions = True,
         read_message_history = True
     )
     for role_name in ROLES_IDS :
@@ -172,7 +171,7 @@ async def on_ready():
     if bot.channels["rules"] is not None :
         if (not("rules" in bot.messages) or await bot.get_messages_by_ids_in_channel(bot.messages["rules"], "rules") == None) :
             await bot.channels["rules"].purge()
-            messages = await bot.send(bot.channels["rules"], MESSAGES["rules"], emojis=[chr(0x1F4DD)])
+            messages = await bot.send(bot.channels["rules"], MESSAGES["rules"], emojis=[chr(0x1F4DD), chr(0x270B)])
             bot.save_message("rules", [message.id for message in messages])
         bot.rules_message = (await bot.get_messages_by_ids_in_channel(bot.messages["rules"][-1:], bot.channels["rules"]))[-1]
         bot.rules_reaction = [r for r in bot.rules_message.reactions if r.emoji == chr(0x1F4DD)][0]
@@ -454,9 +453,6 @@ async def on_member_update(before: discord.Member, after: discord.Member) :
         # suppression de rôle
         for role in [r for r in before.roles if not(r in after.roles)] :
 
-            bot.guild.get_role(ROLES_IDS["base"])
-            bot.guild.get_role(ROLES_IDS["maintenance"])
-
             if ((bot.guild.get_role(ROLES_IDS["base"]) is not None and role.id == ROLES_IDS["base"] and bot.config["maintenance"] == "down")
                 or (bot.guild.get_role(ROLES_IDS["maintenance"]) is not None and role.id == ROLES_IDS["maintenance"] and bot.config["maintenance"] == "up")) :
                 await after.add_roles(role)
@@ -527,7 +523,8 @@ async def on_member_update(before: discord.Member, after: discord.Member) :
         bot.write_json("members")
 
 @bot.event
-async def on_error(event_method, *args, **kwargs):
+async def on_error(*args, **kwargs):
     info = sys.exc_info()
     bot.log(f"error type : {info[0]}\nerror value :{info[1]}\nerror traceback : {str(info[2])}\n", 'error')
     await bot.send(bot.owner.dm_channel, f"error type : {info[0]}\nerror value :{info[1]}\nerror traceback : {str(info[2])}\n", wrappers=('```', '```'))
+    traceback.print_exception()

@@ -1,4 +1,4 @@
-import json, calendar, logging, sys, re, shutil, copy, asyncio
+import json, calendar, logging, sys, re, shutil, copy, asyncio, traceback
 from discord.ext import commands, tasks
 import datetime as dt
 
@@ -62,6 +62,10 @@ class GameBot(commands.Bot) :
             self.vars["members"][pseudo] = BOT_VARS_DEFAULTS["members"].copy()
             self.vars["members"][pseudo]["id"] = discord_member.id
 
+            self.config["ban_roles_backup"][pseudo] = []
+            self.config["maintenance_roles_backup"][pseudo] = []
+            self.config["rules_roles_backup"][pseudo] = []
+
             # on lui ajoute le rôle "base"
             await discord_member.add_roles(self.roles["base"])
 
@@ -73,6 +77,7 @@ class GameBot(commands.Bot) :
             await self.create_command_channel_for_member(self.get_discord_member(pseudo))
 
             self.write_json("members")
+            self.write_config()
 
     async def add_member_to_present_guests(self, event_idstr: str, member: discord.Member) :
 
@@ -479,11 +484,14 @@ class GameBot(commands.Bot) :
                     await self.update_waiting_list(event_idstr)
 
                 # on supprime son salon privé avec le bot
-                await self.channels[f"bot_{pseudo}"].delete()
+                if f"bot_{pseudo}" in self.channels :
+                    if self.channels[f"bot_{pseudo}"] is not None :
+                        await self.channels[f"bot_{pseudo}"].delete()
+                    self.channels.pop(f"bot_{pseudo}")
 
                 # on retire sa réaction du message des règles
                 async for user in self.rules_message.reactions[0].users() :
-                    if user.id == member_id :
+                    if self.guild.get_member(user.id) is None :
                         await self.rules_message.remove_reaction(chr(0x1F4DD), user)
 
                 if f"bot_{pseudo}" in self.channels :
