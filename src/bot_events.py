@@ -96,16 +96,16 @@ async def on_ready():
                     if not(channel_name in [channel.name for channel in bot.guild.channels]) :
 
                         channel = await bot.guild.create_text_channel(channel_name, overwrites={
-                            bot.roles[role_name]: overwrite,
+                            bot.guild.get_role(ROLES_IDS[role_name]): overwrite,
                             bot.guild.default_role: bot.overwrites_none
                         })
                         while channel is None :
                             await asyncio.sleep(RETRY_TIMEOUT)
                             channel = await bot.guild.create_text_channel(channel_name, overwrites={
-                                bot.roles[role_name]: overwrite,
+                                bot.guild.get_role(ROLES_IDS[role_name]): overwrite,
                                 bot.guild.default_role: bot.overwrites_none
                             })
-                            CHANNEL_IDS[channel_name] = channel.id
+                        CHANNEL_IDS[channel_name] = channel.id
 
                     else :
 
