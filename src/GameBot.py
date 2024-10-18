@@ -489,13 +489,6 @@ class GameBot(commands.Bot) :
                         await self.channels[f"bot_{pseudo}"].delete()
                     self.channels.pop(f"bot_{pseudo}")
 
-                # on retire sa réaction du message des règles
-                if self.channels["rules"] :
-                    self.rules_message = await self.channels["rules"].fetch_message(self.rules_message.id)
-                    async for user in self.rules_reaction.users() :
-                        if member_id in [member.id for member in self.members_having_accepted_rules] :
-                            await self.rules_message.remove_reaction(chr(0x1F4DD), user)
-
                 if f"bot_{pseudo}" in self.channels :
                     await self.channels[f"bot_{pseudo}"].delete()
                     self.channels.pop(f"bot_{pseudo}")
