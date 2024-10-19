@@ -99,14 +99,14 @@ class GameBot(commands.Bot) :
             overwrite.update(**EVENT_CHANNEL_PERMISSIONS["soirées"])
             await self.channels[f"soirées_{event_idstr}"].set_permissions(member, overwrite=overwrite)
 
-            await self.send(member.dm_channel, f"Tu es sorti(e) de la liste d'attente pour la soirée '{self.vars['events'][event_idstr]['name']}'. Tu fais donc maintenant partie des personnes qui seront présentes à cette soirée et tu as accès au salon {self.channels[f'soirées_{event_idstr}'].mention}. Tu peux toujours annuler ta venue à cette soirée en retirant ta réaction au message d'invitation ici {self.channels[f'invitations_{event_idstr}'].mention}")
+            await self.send(member.dm_channel, f"### :white_check_mark: Tu es sorti(e) de la liste d'attente pour la soirée {self.vars['events'][event_idstr]['name']} :white_check_mark:\nTu fais donc maintenant partie des personnes qui seront présentes à cette soirée et tu as accès au salon {self.channels[f'soirées_{event_idstr}'].mention}. Tu peux toujours annuler ta venue à cette soirée en retirant ta réaction au message d'invitation ici {self.channels[f'invitations_{event_idstr}'].mention}\n\u200B")
             await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : liste d'attente --> présent(e)")
 
             #await self.update_waiting_list(event_idstr)
 
         else :
 
-            await self.send(self.channels["logsgamebot"], f"Je ne peux pas ajouter {member.display_name} à la liste des membres présents à la soirée '{self.vars['events'][event_idstr]['name']}' (event_idstr = {event_idstr})")
+            await self.send(self.channels["logsgamebot"], f"Je ne peux pas ajouter {member.display_name} à la liste des membres présents à la soirée {self.vars['events'][event_idstr]['name']} (event_idstr = {event_idstr})")
             raise Exception(f"Cannot add member '{member.name}#{member.discriminator}' to the present guests list for event with id '{event_idstr}'")
 
     async def add_member_to_waiting_guests(self, event_idstr: str, member: discord.Member) :
@@ -118,13 +118,13 @@ class GameBot(commands.Bot) :
             self.vars["events"][event_idstr]["waiting_guests"].append(f"{member.name}#{member.discriminator}")
             self.write_json("events")
 
-            await self.send(member.dm_channel, f"Tu as été ajouté(e) à la liste d'attente pour la soirée '{self.vars['events'][event_idstr]['name']}'. S'il n'y a actuellement plus de place à cette soirée, tu vas rester dans cette liste d'attente jusqu'à ce qu'il y ait à nouveau de la place. S'il reste de la place, tu devrais quitter la liste d'attente très prochainement. Je te préviendrai quand tu sortiras de cette liste d'attente.")
-            await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : invité --> liste d'attente")
+            await self.send(member.dm_channel, f"### :hourglass: Tu as été ajouté(e) à la liste d'attente pour la soirée {self.vars['events'][event_idstr]['name']} :hourglass:\nS'il n'y a actuellement plus de place à cette soirée, tu vas rester dans cette liste d'attente jusqu'à ce qu'il y ait à nouveau de la place. S'il reste de la place, tu devrais quitter la liste d'attente très prochainement. Je te préviendrai quand tu sortiras de cette liste d'attente.\n\u200B")
+            await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : invité(e) --> liste d'attente")
 
             await self.update_waiting_list(event_idstr)
 
         else :
-            await self.send(self.channels["logsgamebot"], f"Je ne peux pas ajouter {member.display_name} à la liste d'attente de la soirée '{self.vars['events'][event_idstr]['name']}' (event_idstr = {event_idstr})")
+            await self.send(self.channels["logsgamebot"], f"Je ne peux pas ajouter {member.display_name} à la liste d'attente de la soirée {self.vars['events'][event_idstr]['name']} (event_idstr = {event_idstr})")
             raise Exception(f"Cannot add member '{member.name}#{member.discriminator}' to the waiting list for event with id '{event_idstr}'")
 
     def admin_command(self, function: callable) :
@@ -149,13 +149,13 @@ class GameBot(commands.Bot) :
             if f"{member.name}#{member.discriminator}" in self.vars["events"][event_idstr]["waiting_guests"] :
                 self.vars["events"][event_idstr]["waiting_guests"].remove(f"{member.name}#{member.discriminator}")
                 self.vars["events"][event_idstr]["invited_guests"].append(f"{member.name}#{member.discriminator}")
-                await self.send(member.dm_channel, f"Tu as été retiré(e) de la liste d'attente pour la soirée '{self.vars['events'][event_idstr]['name']}'. Tu es cependant toujours invité(e) à cette soirée donc si tu changes d'avis et souhaites finalement y participer, tu peux remettre ta réaction dans le salon {self.channels[f'invitations_{event_idstr}'].mention}.")
+                await self.send(member.dm_channel, f"### :leftwards_arrow_with_hook: Tu as été retiré(e) de la liste d'attente pour la soirée {self.vars['events'][event_idstr]['name']} :leftwards_arrow_with_hook:\nTu es cependant toujours invité(e) à cette soirée donc si tu changes d'avis et souhaites finalement y participer, tu peux remettre ta réaction dans le salon {self.channels[f'invitations_{event_idstr}'].mention} (tu devras tout de même repasser par la file d'attente)")
                 await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : liste d'attente --> invité(e)")
             else :
                 self.vars["events"][event_idstr]["present_guests"].remove(f"{member.name}#{member.discriminator}")
                 self.vars["events"][event_idstr]["invited_guests"].append(f"{member.name}#{member.discriminator}")
                 await self.remove_permissions_on_channel(self.channels[f"soirées_{event_idstr}"], member)
-                await self.send(member.dm_channel, f"Tu as été retiré(e) des membres présents à la soirée '{self.vars['events'][event_idstr]['name']}'. Tu es cependant toujours invité(e) à cette soirée donc si tu changes d'avis et souhaites finalement y participer, tu peux remettre ta réaction dans le salon {self.channels[f'invitations_{event_idstr}'].mention}.")
+                await self.send(member.dm_channel, f"### :leftwards_arrow_with_hook: Tu as été retiré(e) des membres présents à la soirée {self.vars['events'][event_idstr]['name']} :leftwards_arrow_with_hook:\nTu es cependant toujours invité(e) à cette soirée donc si tu changes d'avis et souhaites finalement y participer, tu peux remettre ta réaction dans le salon {self.channels[f'invitations_{event_idstr}'].mention} (tu devras tout de même repasser par la file d'attente)")
                 await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : présent(e) --> invité(e)")
             self.write_json("events")
 
@@ -163,7 +163,7 @@ class GameBot(commands.Bot) :
 
         else :
 
-            await self.send(self.channels["logsgamebot"], f"Je ne peux pas annuler la participation de {member.display_name} à la soirée '{self.vars['events'][event_idstr]['name']}' (event_idstr = {event_idstr})")
+            await self.send(self.channels["logsgamebot"], f"Je ne peux pas annuler la participation de {member.display_name} à la soirée {self.vars['events'][event_idstr]['name']} (event_idstr = {event_idstr})")
             raise Exception(f"Cannot cancel participation of member '{member.name}#{member.discriminator}' to the event with id '{event_idstr}'")
 
     async def create_command_channel_for_member(self, member: discord.Member) :
@@ -201,7 +201,7 @@ class GameBot(commands.Bot) :
                     for pseudo in self.vars["events"][event_idstr]["waiting_guests"] \
                                 + self.vars["events"][event_idstr]["present_guests"] :
                         if self.get_discord_member(pseudo) is not None :
-                            await self.send(self.get_discord_member(pseudo).dm_channel, f"**__ATTENTION__:** La soirée '{self.vars['events'][event_idstr]['name']}' a été supprimée")
+                            await self.send(self.get_discord_member(pseudo).dm_channel, f"## :warning: La soirée {self.vars['events'][event_idstr]['name']} a été supprimée :warning:")
                     
                 # on supprime les salons
                 for string in ["invitations", "soirées", "logs"] :
@@ -530,11 +530,11 @@ class GameBot(commands.Bot) :
 
             await self.remove_permissions_on_channel(self.channels[f"invitations_{event_idstr}"], member)
 
-            await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : invité --> pas invité")
+            await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : invité(e) --> pas invité(e)")
 
         else :
 
-            await self.send(self.channels["logsgamebot"], f"Je ne peux pas ajouter {member.display_name} à la liste d'attente de la soirée '{self.vars['events'][event_idstr]['name']}' (event_idstr = {event_idstr})")
+            await self.send(self.channels["logsgamebot"], f"Je ne peux pas ajouter {member.display_name} à la liste d'attente de la soirée {self.vars['events'][event_idstr]['name']} (event_idstr = {event_idstr})")
             raise Exception(f"Cannot remove member '{member.name}#{member.discriminator}' from the invited_guests list for event with id '{event_idstr}'")
 
     async def remove_member_from_present_guests(self, event_idstr: str, member: discord.Member) :
@@ -550,14 +550,14 @@ class GameBot(commands.Bot) :
             await self.remove_permissions_on_channel(self.channels[f"invitations_{event_idstr}"], member)
             await self.remove_permissions_on_channel(self.channels[f"soirées_{event_idstr}"], member)
 
-            await self.send(member.dm_channel, f"Tu as été retiré(e) des personnes invitées à la soirée '{self.vars['events'][event_idstr]['name']}'.")
-            await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : présent --> pas invité")
+            await self.send(member.dm_channel, f"### :information: Tu as été retiré(e) des personnes invitées à la soirée {self.vars['events'][event_idstr]['name']}\nraison: tu ne possède plus aucun des rôles invités à cette soirée, soit parce que les rôles invités t'ont été retiré, soit parce que les rôles que tu possède ne sont plus invités")
+            await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : présent --> pas invité(e)")
 
             await self.update_waiting_list(event_idstr)
 
         else :
 
-            await self.send(self.channels["logsgamebot"], f"Je ne peux pas ajouter {member.display_name} à la liste d'attente de la soirée '{self.vars['events'][event_idstr]['name']}' (event_idstr = {event_idstr})")
+            await self.send(self.channels["logsgamebot"], f"Je ne peux pas ajouter {member.display_name} à la liste d'attente de la soirée {self.vars['events'][event_idstr]['name']} (event_idstr = {event_idstr})")
             raise Exception(f"Cannot remove member '{member.name}#{member.discriminator}' from the present_guests list for event with id '{event_idstr}'")
 
     async def remove_member_from_waiting_guests(self, event_idstr: str, member: discord.Member) :
@@ -572,14 +572,14 @@ class GameBot(commands.Bot) :
 
             await self.remove_permissions_on_channel(self.channels[f"invitations_{event_idstr}"], member)
 
-            await self.send(member.dm_channel, f"Tu as été retiré(e) des personnes invitées à la soirée '{self.vars['events'][event_idstr]['name']}'.")
-            await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : liste d'attente --> pas invité")
+            await self.send(member.dm_channel, f"### :information: Tu as été retiré(e) des personnes invitées à la soirée {self.vars['events'][event_idstr]['name']}\nraison: tu ne possède plus aucun des rôles invités à cette soirée, soit parce que les rôles invités t'ont été retiré, soit parce que les rôles que tu possède ne sont plus invités")
+            await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : liste d'attente --> pas invité(e)")
 
             await self.update_waiting_list(event_idstr)
 
         else :
 
-            await self.send(self.channels["logsgamebot"], f"Je ne peux pas ajouter {member.display_name} à la liste d'attente de la soirée '{self.vars['events'][event_idstr]['name']}' (event_idstr = {event_idstr})")
+            await self.send(self.channels["logsgamebot"], f"Je ne peux pas ajouter {member.display_name} à la liste d'attente de la soirée {self.vars['events'][event_idstr]['name']} (event_idstr = {event_idstr})")
             raise Exception(f"Cannot remove member '{member.name}#{member.discriminator}' from the waiting_guests list for event with id '{event_idstr}'")
         
     async def remove_permissions_on_channel(self, channel: discord.TextChannel, target: discord.Member|discord.Role) :
@@ -594,12 +594,12 @@ class GameBot(commands.Bot) :
         with open("json/messages.json", "wt") as f :
             f.write(json.dumps(self.messages, indent=2))
             
-    async def send(self, channel: discord.TextChannel, message_content: str, wrappers: tuple[str] = ('', ''), emojis: list[discord.Reaction] = []) :
+    async def send(self, channel: discord.TextChannel, message_content: str, *args, wrappers: tuple[str] = ('', ''), emojis: list[discord.Reaction] = [], **kwargs) :
         """ This function sends a message into a channel """
         message_contents = self.divide_message(message_content, wrappers=wrappers)
         messages: list[discord.Message] = []
         for msg in message_contents :
-            messages.append(await channel.send(msg))
+            messages.append(await channel.send(msg, *args, **kwargs))
         for emoji in emojis :
             await messages[-1].add_reaction(emoji)
         return messages
@@ -652,17 +652,17 @@ class GameBot(commands.Bot) :
                 pseudo = f"{member.name}#{member.discriminator}"
                 if pseudo in self.vars["events"][event_idstr]["invited_guests"] :
                     self.vars["events"][event_idstr]["invited_guests"].remove(pseudo)
-                    msg += f"Changement d'état pour '{member.display_name}' : invité --> pas invité (le rôle '{role.name}' n'est plus invité)\n"
+                    msg += f"Changement d'état pour '{member.display_name}' : invité(e) --> pas invité(e) (le rôle {role.name} n'est plus invité)\n"
                 if pseudo in self.vars["events"][event_idstr]["waiting_guests"] :
                     self.vars["events"][event_idstr]["waiting_guests"].remove(pseudo)
-                    msg += f"Changement d'état pour '{member.display_name}' : liste d'attente --> pas invité (le rôle '{role.name}' n'est plus invité)\n"
+                    msg += f"Changement d'état pour '{member.display_name}' : liste d'attente --> pas invité(e) (le rôle {role.name} n'est plus invité)\n"
                     await (await self.get_all_messages_in_channel(self.channels[f"invitations_{event_idstr}"]))[-1].remove_reaction(chr(0x1F44D), member)
-                    await self.send(member.dm_channel, f"Tu as été retiré(e) des personnes invitées à la soirée '{self.vars['events'][event_idstr]['name']}' car le rôle '{role.name}' n'est plus invité.")
+                    await self.send(member.dm_channel, f"### :information: Tu as été retiré(e) des personnes invitées à la soirée {self.vars['events'][event_idstr]['name']}\nraison: tu ne possède plus aucun des rôles invités à cette soirée, soit parce que les rôles invités t'ont été retiré, soit parce que les rôles que tu possède ne sont plus invités")
                 if pseudo in self.vars["events"][event_idstr]["present_guests"] :
                     self.vars["events"][event_idstr]["present_guests"].remove(pseudo)
-                    msg += f"Changement d'état pour '{member.display_name}' : présent --> pas invité (le rôle '{role.name}' n'est plus invité)\n"
+                    msg += f"Changement d'état pour '{member.display_name}' : présent --> pas invité(e) (le rôle {role.name} n'est plus invité)\n"
                     await (await self.get_all_messages_in_channel(self.channels[f"invitations_{event_idstr}"]))[-1].remove_reaction(chr(0x1F44D), member)
-                    await self.send(member.dm_channel, f"Tu as été retiré(e) des personnes invitées à la soirée '{self.vars['events'][event_idstr]['name']}' car le rôle '{role.name}' n'est plus invité.")
+                    await self.send(member.dm_channel, f"### :information: Tu as été retiré(e) des personnes invitées à la soirée {self.vars['events'][event_idstr]['name']}\nraison: tu ne possède plus aucun des rôles invités à cette soirée, soit parce que les rôles invités t'ont été retiré, soit parce que les rôles que tu possède ne sont plus invités")
                     await self.remove_permissions_on_channel(self.channels[f"soirées_{event_idstr}"], member)
             self.vars["events"][event_idstr]["invited_roles"].remove(role.id)
             self.write_json("events")
@@ -775,7 +775,7 @@ class GameBot(commands.Bot) :
                     await self.add_member_to_present_guests(event_idstr, self.get_discord_member(pseudo))
 
         else :
-            await self.send(self.channels["logsgamebot"], f"Je ne peux pas mettre à jour la liste d'attente pour la soirée '{self.vars['events'][event_idstr]['name']}' (event_idstr = {event_idstr})")
+            await self.send(self.channels["logsgamebot"], f"Je ne peux pas mettre à jour la liste d'attente pour la soirée {self.vars['events'][event_idstr]['name']} (event_idstr = {event_idstr})")
             raise Exception(f"Cannot update waiting list for event with id '{event_idstr}'")
 
     def write_json(self, var_name: str) :

@@ -95,19 +95,22 @@ Voici une présentation des différentes catégories du serveur :
 
 Afin que chacun puisse avoir une expérience de ce serveur la plus agréable possible, il est nécessaire que chaque membre de celui-ci accepte les règles suivantes :
 
-:straight_ruler: __Règle n°1__ : Chaque membre du serveur doit être respectueux dans ses messages.
+:straight_ruler: __Règle n°1__ : Chaque membre du serveur doit être respectueux envers les autres membres. 
 
-:straight_ruler: __Règle n°2__ : Évitez aussi les sujets potentiellement sensibles. Ce serveur a pour objectif de rassembler \
-des amis et de leur faire passer des moments agréables, pas provoquer des situations désagréables par le biais de discussions \
-que certains ne souhaitent pas avoir ici. Si toutefois certains d'entre vous souhaitent débattre de quelque sujet que ce soit \
-(dans le respect de la règle n°1), j'ai mis à disposition un salon dédié à cela dans lequel cette deuxième règle ne s'applique \
-pas.
+:straight_ruler: __Règle n°2__ : Ce serveur a vocation à être un endroit agréable où tout le monde échange avec plaisir. Afin de faire en sorte que ce soit \
+le cas, il est demandé à ses membres d'éviter les sujets risquant de provoquer des joutes verbales (si vous voulez en découdre il y a un réseau social qui a \
+été conçu pour ça et qui s'appelle twitter X, mais ici on évite les sujets à risque et on passe des bon moments)
 
-:straight_ruler: __Règle n°3__ : Être gentil
+:straight_ruler: __Règle n°3__ : Bien évidemment, on respecte les règles prévues par les espaces englobant ce serveur. Je vous passe les détails mais si vous \
+les voulez et avez quelques années de libre devant vous pour les étudier, elles sont dispo [ici](https://discord.com/terms) et [ici](https://www.legifrance.gouv.fr/codes/texte_lc/LEGITEXT000006070719/)
 
-:straight_ruler: __Règle n°4__ : Ne pas être méchant
+:straight_ruler: __Règle n°4__ : Être gentil
+
+:straight_ruler: __Règle n°5__ : Ne pas être méchant
 
 (Ceux qui ont la ref des deux dernières règles levez la main :raised_hand:)
+
+En cas de non-respect de ces règles, {owner_mention} sera colère tout rouge :rage: et sanctionnera les contrevenants à coups de bâton <:baton:1297299703045816330>
 
 Veuillez signer (:pencil:) ce message pour avoir accès au reste du serveur
 
