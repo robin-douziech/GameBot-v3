@@ -51,7 +51,7 @@ async def banned_gamebot(ctx: commands.Context):
 @bot.private_command
 async def birthday_gamebot(ctx: commands.Context, *args, **kwargs) :
     author = bot.guild.get_member(ctx.author.id)
-    if len(bot.vars["members"][f"{author.name}#{author.discriminator}"]["questions"]) == 0 :
+    if not(bot.vars["members"][f"{author.name}#{author.discriminator}"]["questionned"]) :
         question_type = "birthday"
         bot.vars["members"][f"{author.name}#{author.discriminator}"]["questions"] = ["", *list(CREATION_QUESTIONS[question_type].keys())]
         bot.vars["members"][f"{author.name}#{author.discriminator}"]["questionned"] = question_type
@@ -90,7 +90,6 @@ async def kill_gamebot(ctx: commands.Context, *args, **kwargs) :
 @bot.admin_command
 @bot.private_command
 async def logs_gamebot(ctx: commands.Context, nb_lines: int = 10, *args, **kwargs) :
-    author = bot.guild.get_member(ctx.author.id)
     (day, month, year) = bot.get_current_datetime()[:3]
     try :
         with open(f"logs/20{year}/{month}/{day}.log", "rt") as f :
@@ -101,6 +100,17 @@ async def logs_gamebot(ctx: commands.Context, nb_lines: int = 10, *args, **kwarg
             await bot.send(ctx.channel, txt, wrappers=('```', '```'))
     except Exception as e :
         bot.log(f"An exception occured while reading logs: {e}", 'error')
+
+@bot.command(name="news")
+@bot.admin_command
+@bot.private_command
+async def news_gamebot(ctx: commands.Context) :
+    author = bot.guild.get_member(ctx.author.id)
+    if not(bot.vars["members"][f"{author.name}#{author.discriminator}"]["questionned"]) :
+        bot.vars["members"][f"{author.name}#{author.discriminator}"]["questionned"] = "news"
+        bot.write_json("members")
+    else :
+        await bot.send(ctx.channel, "Tu as déjà une autre commande en cours")    
 
 @bot.command(name="maintenance")
 @bot.admin_command

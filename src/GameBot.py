@@ -457,6 +457,12 @@ class GameBot(commands.Bot) :
 
                                 self.write_json("events")
 
+                    case "news" :
+
+                        await self.send(self.channels["annonces"], message.content)
+                        self.vars["members"][f"{author.name}#{author.discriminator}"]["questionned"] = ""
+                        self.write_json("members")
+
                     case _ :
                         pass
 
