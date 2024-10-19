@@ -16,7 +16,7 @@ async def ban_gamebot(ctx: commands.Context, *args, **kwargs) :
             if ((re.match(r"^(\d+)$", args[0]) and int(args[0]) == member.id)
                 or (target == member.display_name and len([m.display_name for m in bot.guild.members if m.display_name == target]) == 1)) :
 
-                if member.get_role(bot.roles["admin"]) is None :
+                if member.get_role(ROLES_IDS["admin"]) is None and not(bot.vars["members"][pseudo]["banned"]) :
 
                     # on pass "banned" à True
                     bot.vars["members"][pseudo]["banned"] = True
@@ -36,6 +36,8 @@ async def ban_gamebot(ctx: commands.Context, *args, **kwargs) :
 
                     bot.write_json("members")
                     bot.write_config()
+
+                    await bot.send(ctx.channel, f"{member.display_name} est maintenant banni")
 
                 return
 
@@ -193,61 +195,65 @@ async def unban_gamebot(ctx: commands.Context, *args, **kwargs) :
                 if ((re.match(r"^(\d+)$", args[0]) and int(args[0]) == member.id)
                     or (target == member.display_name and len([m.display_name for m in bot.guild.members if m.display_name == target]) == 1)) :
 
-                    # on passe "banned" à False
-                    bot.vars["members"][pseudo]["banned"] = False
+                    if bot.vars["members"][pseudo]["banned"] :
 
-                    if bot.config["maintenance"] == "down" :
+                        # on passe "banned" à False
+                        bot.vars["members"][pseudo]["banned"] = False
 
-                        # on donne le rôle "base" s'il ne l'a pas
-                        if member.get_role(ROLES_IDS["base"]) is None :
-                            await member.add_roles(bot.roles["base"])
+                        if bot.config["maintenance"] == "down" :
 
-                        # on restitue le rôle "7tadellien"
-                        if member.get_role(ROLES_IDS["7tadellien"]) is None and (bot.channels["règles"] is None or member in bot.members_having_accepted_rules) :
-                            await member.add_roles(bot.roles["7tadellien"])
+                            # on donne le rôle "base" s'il ne l'a pas
+                            if member.get_role(ROLES_IDS["base"]) is None :
+                                await member.add_roles(bot.roles["base"])
 
-                        # on retire le rôle "maintenance" s'il l'a
-                        if member.get_role(ROLES_IDS["maintenance"]) is not None :
-                            await member.remove_roles(bot.roles["maintenance"])
+                            # on restitue le rôle "7tadellien"
+                            if member.get_role(ROLES_IDS["7tadellien"]) is None and (bot.channels["règles"] is None or member in bot.members_having_accepted_rules) :
+                                await member.add_roles(bot.roles["7tadellien"])
 
-                        # on donne l'accès au salon privé avec le bot (s'il a accepté les règles)
-                        if (bot.channels["règles"] is None or member in bot.members_having_accepted_rules) :
-                            overwrite = copy.deepcopy(bot.overwrites_none)
-                            overwrite.update(
-                                read_messages=True,
-                                send_messages=True,
-                                mention_everyone=True,
-                                read_message_history=True
-                            )
-                            await bot.channels[f"bot_{pseudo}"].set_permissions(member, overwrite=overwrite)
+                            # on retire le rôle "maintenance" s'il l'a
+                            if member.get_role(ROLES_IDS["maintenance"]) is not None :
+                                await member.remove_roles(bot.roles["maintenance"])
 
-                    else :
+                            # on donne l'accès au salon privé avec le bot (s'il a accepté les règles)
+                            if (bot.channels["règles"] is None or member in bot.members_having_accepted_rules) :
+                                overwrite = copy.deepcopy(bot.overwrites_none)
+                                overwrite.update(
+                                    read_messages=True,
+                                    send_messages=True,
+                                    mention_everyone=True,
+                                    read_message_history=True
+                                )
+                                await bot.channels[f"bot_{pseudo}"].set_permissions(member, overwrite=overwrite)
 
-                        # on retire le rôle "base" s'il l'a
-                        if member.get_role(ROLES_IDS["base"]) is not None :
-                            await member.remove_roles(bot.roles["base"])
+                        else :
 
-                        # on retire le rôle "7tadellien" s'il l'a
-                        if member.get_role(ROLES_IDS["7tadellien"]) is not None :
-                            await member.remove(bot.roles["7tadellien"])
+                            # on retire le rôle "base" s'il l'a
+                            if member.get_role(ROLES_IDS["base"]) is not None :
+                                await member.remove_roles(bot.roles["base"])
 
-                        # on donne le rôle "maintenance" s'il ne l'a pas
-                        if member.get_role(ROLES_IDS["maintenance"]) is None :
-                            await member.add_roles(bot.roles["maintenance"])
+                            # on retire le rôle "7tadellien" s'il l'a
+                            if member.get_role(ROLES_IDS["7tadellien"]) is not None :
+                                await member.remove(bot.roles["7tadellien"])
 
-                        # on retire l'accès au salon privé avec le bot
-                        await bot.remove_permissions_on_channel(bot.channels[f"bot_{pseudo}"], member)
+                            # on donne le rôle "maintenance" s'il ne l'a pas
+                            if member.get_role(ROLES_IDS["maintenance"]) is None :
+                                await member.add_roles(bot.roles["maintenance"])
 
-                    # on restitue les rôles en backup
-                    for role_id in bot.config["ban_roles_backup"][pseudo] :
-                        await member.add_roles(bot.guild.get_role(role_id))
-                    bot.config["ban_roles_backup"][pseudo] = []
+                            # on retire l'accès au salon privé avec le bot
+                            await bot.remove_permissions_on_channel(bot.channels[f"bot_{pseudo}"], member)
 
-                    # on lui redonne accès aux salon des soirées auxquelles il est invité
-                    await bot.update_permissions_on_event_channels(member=member)
+                        # on restitue les rôles en backup
+                        for role_id in bot.config["ban_roles_backup"][pseudo] :
+                            await member.add_roles(bot.guild.get_role(role_id))
+                        bot.config["ban_roles_backup"][pseudo] = []
 
-                    bot.write_json("members")
-                    bot.write_config()
+                        # on lui redonne accès aux salon des soirées auxquelles il est invité
+                        await bot.update_permissions_on_event_channels(member=member)
+
+                        bot.write_json("members")
+                        bot.write_config()
+
+                        await bot.send(ctx.channel, f"{member.display_name} n'est plus banni")
 
                     return
                 
