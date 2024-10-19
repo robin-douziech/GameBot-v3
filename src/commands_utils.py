@@ -40,6 +40,12 @@ async def ban_gamebot(ctx: commands.Context, *args, **kwargs) :
                     await bot.send(ctx.channel, f"{member.display_name} est maintenant banni")
 
                 return
+            
+@bot.command(name="banned")
+@bot.admin_command
+@bot.private_command
+async def banned_gamebot(ctx: commands.Context):
+    await bot.send(ctx.channel, "Voici les membres actuellement bannis du serveur :\n- " + "\n- ".join([str(member.display_name) for member in [m for m in bot.guild.members if not(m.bot) and bot.vars["members"][f"{m.name}#{m.discriminator}"]["banned"]]]))
 
 @bot.command(name="birthday")
 @bot.private_command

@@ -492,7 +492,7 @@ async def on_member_update(before: discord.Member, after: discord.Member) :
         for role in [r for r in after.roles if not(r in before.roles)] :
 
             # si le membre est "banned", on ajoute l'id du rôle à la backup et on supprime le rôle
-            if bot.vars["members"][f"{after.name}#{after.discriminator}"]["banned"] :
+            if bot.vars["members"][f"{after.name}#{after.discriminator}"]["banned"] and not(role in roles_to_ignore) :
                 if not(role.id in bot.config["ban_roles_backup"][f"{after.name}#{after.discriminator}"]) :
                     bot.config["ban_roles_backup"][f"{after.name}#{after.discriminator}"].append(role.id)
                     bot.write_config()
