@@ -489,9 +489,10 @@ class GameBot(commands.Bot) :
                         await self.channels[f"bot_{pseudo}"].delete()
                     self.channels.pop(f"bot_{pseudo}")
 
-                if f"bot_{pseudo}" in self.channels :
-                    await self.channels[f"bot_{pseudo}"].delete()
-                    self.channels.pop(f"bot_{pseudo}")
+                for member in self.members_having_accepted_rules :
+                    if member.id == member_id :
+                        await self.rules_message.remove_reaction(chr(0x1F4DD), member)
+                        self.members_having_accepted_rules.remove(member)
 
                 self.vars["members"].pop(pseudo)
                 self.write_json("members")

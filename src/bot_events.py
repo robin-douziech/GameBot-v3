@@ -367,13 +367,6 @@ async def on_member_remove(member: discord.Member) :
     if pseudo in bot.vars["members"] and not(member in bot.guild.members) :
         await bot.remove_members([pseudo])
 
-        # on retire sa réaction du message des règles
-        if bot.channels["rules"] :
-            bot.rules_message = await bot.channels["rules"].fetch_message(bot.rules_message.id)
-            if member in bot.members_having_accepted_rules :
-                await bot.rules_message.remove_reaction(chr(0x1F4DD), member)
-                bot.members_having_accepted_rules.remove(member)
-
 @bot.event
 async def on_raw_reaction_add(payload: discord.RawReactionActionEvent) :
     channel = bot.get_channel(payload.channel_id)
