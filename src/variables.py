@@ -180,7 +180,7 @@ Si tu ne veux pas que j'annonce ton anniversaire, envoie-moi 0.
             "valid": event_datetime_regexp
         },
         "nb_max_guests": {
-            "text": "Combien veux-tu qu'il y ait de personne au maximum à cette soirée (toi compris) ? Tu pourras inviter plus de personnes que cette valeur mais toutes ne pourront pas accepter l'invitation, je m'occuperai de gérer la liste d'attente si trop de personnes acceptent l'invitation",
+            "text": "Combien veux-tu qu'il y ait de personnes au maximum à cette soirée (toi compris) ? Tu pourras inviter plus de personnes que cette valeur mais toutes ne pourront pas accepter l'invitation, je m'occuperai de gérer la liste d'attente si trop de personnes acceptent l'invitation",
             "valid": r"^([1-9]\d*|0)$"
         }
     }
