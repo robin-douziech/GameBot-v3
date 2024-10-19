@@ -472,16 +472,22 @@ class GameBot(commands.Bot) :
                 for event_idstr in [id for id in self.vars["events"] if pseudo in self.vars["events"][id]["invited_guests"]
                                                                                 + self.vars["events"][id]["waiting_guests"]
                                                                                 + self.vars["events"][id]["present_guests"]] :
+                    msg = ""
                     if member_id in self.vars["events"][event_idstr]["invited_members"] :
                         self.vars["events"][event_idstr]["invited_members"].remove(member_id)
                     if pseudo in self.vars["events"][event_idstr]["invited_guests"] :
                         self.vars["events"][event_idstr]["invited_guests"].remove(pseudo)
+                        msg += f"Changement d'état pour '{member.display_name}' : invité(e) --> pas invité(e)\n"
                     elif pseudo in self.vars["events"][event_idstr]["waiting_guests"] :
                         self.vars["events"][event_idstr]["waiting_guests"].remove(pseudo)
+                        msg += f"Changement d'état pour '{member.display_name}' : liste d'attente --> pas invité(e)\n"
                     elif pseudo in self.vars["events"][event_idstr]["present_guests"] :
                         self.vars["events"][event_idstr]["present_guests"].remove(pseudo)
+                        msg += f"Changement d'état pour '{member.display_name}' : présent(e) --> pas invité(e)\n"
                     self.write_json("events")
                     await self.update_waiting_list(event_idstr)
+                    if len(msg) > 0 :
+                        await self.send(f"logs_{event_idstr}", msg)
 
                 # on supprime son salon privé avec le bot
                 if f"bot_{pseudo}" in self.channels :
