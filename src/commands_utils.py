@@ -149,7 +149,7 @@ async def maintenance_gamebot(ctx: commands.Context, *args, **kwargs) :
             await bot.update_permissions_on_event_channels()
 
             # si la fonctionnalité "règles" est utilisée, on ajoute le rôle "7tadellien" uniquement aux membres ayant accepté les règles
-            if bot.channels["rules"] is not None :
+            if bot.channels["règles"] is not None :
 
                 for member in bot.members_having_accepted_rules :
 
@@ -203,7 +203,7 @@ async def unban_gamebot(ctx: commands.Context, *args, **kwargs) :
                             await member.add_roles(bot.roles["base"])
 
                         # on restitue le rôle "7tadellien"
-                        if member.get_role(ROLES_IDS["7tadellien"]) is None and (bot.channels["rules"] is None or member in bot.members_having_accepted_rules) :
+                        if member.get_role(ROLES_IDS["7tadellien"]) is None and (bot.channels["règles"] is None or member in bot.members_having_accepted_rules) :
                             await member.add_roles(bot.roles["7tadellien"])
 
                         # on retire le rôle "maintenance" s'il l'a
@@ -211,7 +211,7 @@ async def unban_gamebot(ctx: commands.Context, *args, **kwargs) :
                             await member.remove_roles(bot.roles["maintenance"])
 
                         # on donne l'accès au salon privé avec le bot (s'il a accepté les règles)
-                        if (bot.channels["rules"] is None or member in bot.members_having_accepted_rules) :
+                        if (bot.channels["règles"] is None or member in bot.members_having_accepted_rules) :
                             overwrite = copy.deepcopy(bot.overwrites_none)
                             overwrite.update(
                                 read_messages=True,

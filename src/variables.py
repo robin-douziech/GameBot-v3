@@ -13,7 +13,7 @@ RETRY_TIMEOUT = 1
 
 ROLES_TO_IGNORE = ["base", "7tadellien", "maintenance", "admin"]
 CHANNELS_BY_ROLE = {
-    "base": ["informations", "rules"],
+    "base": ["bienvenue", "informations", "règles"],
     "7tadellien": ["annonces", "anniversaires"],
     "maintenance": ["maintenance"],
     "admin": ["logsgamebot"]
@@ -53,7 +53,7 @@ BOT_VARS_DEFAULTS = {
     "config": {
         "hours_offset": 0,
         "logs_retention_period": "1 month",
-        "rules": True,
+        "règles": True,
         "maintenance": "down",
         "ban_roles_backup": {},
         "maintenance_roles_backup": {},
@@ -91,7 +91,7 @@ Voici une présentation des différentes catégories du serveur :
 - Quand quelqu'un t'invite à une soirée, tu vera apparaître un salon dans la catégorie #invitations avec un message auquel tu pourras réagir pour accepter l'invitation ou non
 - Si tu acceptes une invitation, tu auras accès à un salon dans la catégorie #soirées
 """,
-    "rules": """# :scroll: Règles du serveur
+    "règles": """# :scroll: Règles du serveur
 
 Afin que chacun puisse avoir une expérience de ce serveur la plus agréable possible, il est nécessaire que chaque membre de celui-ci accepte les règles suivantes :
 

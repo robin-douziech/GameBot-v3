@@ -73,7 +73,7 @@ class GameBot(commands.Bot) :
             await discord_member.add_roles(self.roles["base"])
 
             # si la fonctionnalité "règles" n'est pas utilisée on lui ajoute le rôle "7tadellien"
-            if self.channels["rules"] is None :
+            if self.channels["règles"] is None :
                 await discord_member.add_roles(self.roles["7tadellien"])
 
             # on lui crée son salon de discussion avec le bot
@@ -168,7 +168,7 @@ class GameBot(commands.Bot) :
 
     async def create_command_channel_for_member(self, member: discord.Member) :
         """Create the member's command channel with appropriate permissions (depending on maintenance status and rules acceptation)"""
-        permissions = self.config["maintenance"] == "down" and (self.channels["rules"] is None or member in self.members_having_accepted_rules) and not(self.vars["members"][f"{member.name}#{member.discriminator}"]["banned"])
+        permissions = self.config["maintenance"] == "down" and (self.channels["règles"] is None or member in self.members_having_accepted_rules) and not(self.vars["members"][f"{member.name}#{member.discriminator}"]["banned"])
         member_permissions = {
             "read_messages": permissions,
             "send_messages": permissions,
@@ -687,7 +687,7 @@ class GameBot(commands.Bot) :
 
                 # on ajuste les permissions du salon de logs
                 host = self.get_discord_member(event_idstr.split(':')[0])
-                host_can_see_channels = members_can_see_channels and (self.channels["rules"] is None or host in self.members_having_accepted_rules) and not(self.vars["members"][f"{host.name}#{host.discriminator}"]["banned"])
+                host_can_see_channels = members_can_see_channels and (self.channels["règles"] is None or host in self.members_having_accepted_rules) and not(self.vars["members"][f"{host.name}#{host.discriminator}"]["banned"])
                 if host_can_see_channels :
                     overwrite = copy.deepcopy(self.overwrites_none)
                     overwrite.update(**EVENT_CHANNEL_PERMISSIONS["logs"])
@@ -700,7 +700,7 @@ class GameBot(commands.Bot) :
                     
                     member = self.guild.get_member(member_id)
                     pseudo = f"{member.name}#{member.discriminator}"
-                    can_see_channels = members_can_see_channels and (self.channels["rules"] is None or member in self.members_having_accepted_rules) and not(self.vars["members"][pseudo]["banned"])
+                    can_see_channels = members_can_see_channels and (self.channels["règles"] is None or member in self.members_having_accepted_rules) and not(self.vars["members"][pseudo]["banned"])
 
                     # on ajuste les permissions du salon d'invitation
                     if can_see_channels :
@@ -722,7 +722,7 @@ class GameBot(commands.Bot) :
         else : # on anctualise les permissions des salons pour le membre renseigné
 
             pseudo = f"{member.name}#{member.discriminator}"
-            can_see_channels = members_can_see_channels and (self.channels["rules"] is None or member in self.members_having_accepted_rules) and not(self.vars["members"][pseudo]["banned"])
+            can_see_channels = members_can_see_channels and (self.channels["règles"] is None or member in self.members_having_accepted_rules) and not(self.vars["members"][pseudo]["banned"])
 
             for event_idstr in self.vars["events"] :
 

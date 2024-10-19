@@ -10,8 +10,9 @@ CATEGORY_IDS = {
 }
 
 CHANNEL_IDS = {
+    "bienvenue": 0,
     "informations" : 0,
-    "rules": 0,
+    "règles": 0,
     "annonces": 0,
     "anniversaires": 0,
     "maintenance": 0,
@@ -19,8 +20,8 @@ CHANNEL_IDS = {
 }
 
 ROLES_IDS = {
-    "admin": 0,
     "base": 0,
     "7tadellien": 0,
-    "maintenance": 0
+    "maintenance": 0,
+    "admin": 0
 }

@@ -90,7 +90,7 @@ async def on_ready():
     )
     for role_name in ROLES_IDS :
         for channel_name in CHANNELS_BY_ROLE[role_name] :
-            if ((bot.config["rules"] or channel_name != "rules")) :
+            if ((bot.config["règles"] or channel_name != "règles")) :
                 if (bot.guild.get_channel(CHANNEL_IDS[channel_name]) is None) :
                     if not(channel_name in [channel.name for channel in bot.guild.channels]) :
 
@@ -168,12 +168,12 @@ async def on_ready():
         bot.save_message("informations", [message.id for message in messages])
     #
     # Messages de règles dans le salon #règles (si la fonctionnailité est utilisée)
-    if bot.channels["rules"] is not None :
-        if (not("rules" in bot.messages) or await bot.get_messages_by_ids_in_channel(bot.messages["rules"], "rules") == None) :
-            await bot.channels["rules"].purge()
-            messages = await bot.send(bot.channels["rules"], MESSAGES["rules"], emojis=[chr(0x1F4DD), chr(0x270B)])
-            bot.save_message("rules", [message.id for message in messages])
-        bot.rules_message = (await bot.get_messages_by_ids_in_channel(bot.messages["rules"][-1:], bot.channels["rules"]))[-1]
+    if bot.channels["règles"] is not None :
+        if (not("règles" in bot.messages) or await bot.get_messages_by_ids_in_channel(bot.messages["règles"], "règles") == None) :
+            await bot.channels["règles"].purge()
+            messages = await bot.send(bot.channels["règles"], MESSAGES["règles"], emojis=[chr(0x1F4DD), chr(0x270B)])
+            bot.save_message("règles", [message.id for message in messages])
+        bot.rules_message = (await bot.get_messages_by_ids_in_channel(bot.messages["règles"][-1:], bot.channels["règles"]))[-1]
         bot.rules_reaction = [r for r in bot.rules_message.reactions if r.emoji == chr(0x1F4DD)][0]
         bot.members_having_accepted_rules = [user async for user in bot.rules_reaction.users() if not(user.bot)]
     #
@@ -213,7 +213,7 @@ async def on_ready():
             await member.add_roles(bot.roles["base"])
 
         # si la fonctionnalité "règles" est utilisée, on ajoute le rôle "7tadellien" uniquement aux membres ayant accepté les règles
-        if bot.channels["rules"] is not None :
+        if bot.channels["règles"] is not None :
 
             for member in [m for m in bot.guild.members if not(m.bot) and not(bot.vars["members"][f"{m.name}#{m.discriminator}"]["banned"])] :
 
@@ -344,7 +344,7 @@ async def on_ready():
 async def on_message(message: discord.Message) :
     author = bot.guild.get_member(message.author.id)
     if (not(author.bot)
-        and (bot.channels["rules"] is None or author in bot.members_having_accepted_rules)
+        and (bot.channels["règles"] is None or author in bot.members_having_accepted_rules)
         and (bot.config["maintenance"] == "down" or author.get_role(ROLES_IDS["admin"]) is not None)
         and not(bot.vars["members"][f"{author.name}#{author.discriminator}"]["banned"])) :
         if bot.config['maintenance'] == "down" or message.content == "!maintenance down" :
@@ -376,7 +376,7 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent) :
     if author is not None and not(author.bot) :
 
         # réaction au message des règles du serveur
-        if "rules" in bot.messages and len(bot.messages["rules"]) > 0 and message.id == bot.messages["rules"][-1] :
+        if "règles" in bot.messages and len(bot.messages["règles"]) > 0 and message.id == bot.messages["règles"][-1] :
             if payload.emoji.name == chr(0x1F4DD) :
                 bot.members_having_accepted_rules.append(author)
                 if not(bot.vars["members"][f"{author.name}#{author.discriminator}"]["banned"]) :
@@ -422,7 +422,7 @@ async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent) :
     if author is not None and not(author.bot) :
 
         # réaction au message des règles du serveur
-        if "rules" in bot.messages and len(bot.messages["rules"]) > 0 and message.id == bot.messages["rules"][-1] :
+        if "règles" in bot.messages and len(bot.messages["règles"]) > 0 and message.id == bot.messages["règles"][-1] :
             if payload.emoji.name == chr(0x1F4DD) :
                 bot.members_having_accepted_rules.remove(author)
                 if not(bot.vars["members"][f"{author.name}#{author.discriminator}"]["banned"]) :
@@ -506,7 +506,7 @@ async def on_member_update(before: discord.Member, after: discord.Member) :
                 await after.remove_roles(role)
 
             # si le membre n'a pas accepté les règles, on ajoute l'id du rôle à la backup et on supprime le rôle
-            elif bot.channels["rules"] is not None and not(after in bot.members_having_accepted_rules) and not(role in roles_to_ignore) :
+            elif bot.channels["règles"] is not None and not(after in bot.members_having_accepted_rules) and not(role in roles_to_ignore) :
                 if not(role.id in bot.config["rules_roles_backup"][f"{after.name}#{after.discriminator}"]) :
                     bot.config["rules_roles_backup"][f"{after.name}#{after.discriminator}"].append(role.id)
                     bot.write_config()
