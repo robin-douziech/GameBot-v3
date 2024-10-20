@@ -78,18 +78,32 @@ EVENT_CHANNEL_PERMISSIONS = {
 }
 
 MESSAGES = {
-    "informations": """## Bienvenue sur 7tadelles ! <:7tadelles_logo:1289883296439730178>
+    "informations": """# <:7tadelles_logo:1289883296439730178> Bienvenue sur 7tadelles <:7tadelles_logo:1289883296439730178>
 
 Je m'appelle GameBot et je vais tenter de rendre ton expérience sur ce serveur la plus agréable possible.
 
-7tadelles a été créé afin de rassembler quelques amis amateurs de jeux de société. Ma principale fonction est l'organisation de soirées jeux.\
-N'importe qui sur ce serveur peut m'utiliser pour organiser une soirée et y inviter des membres du serveur.
+7tadelles a été créé afin de rassembler quelques amis amateurs de jeux de société. Ma principale fonction est l'organisation d'événements.\
+N'importe qui sur ce serveur peut m'utiliser pour organiser un événement et y inviter des membres du serveur (ces événements ne sont pas forcément liés au domaine du jeu de société, tu peux créer n'importe quel type d'événement).
 
-Voici une présentation des différentes catégories du serveur :
+Voici les principales catégories du serveur et leur utilité :
 
-- Tu pourras discuter de tout et n'importe quoi avec n'importe qui dans les salons de la catégorie #général
-- Quand quelqu'un t'invite à une soirée, tu vera apparaître un salon dans la catégorie #invitations avec un message auquel tu pourras réagir pour accepter l'invitation ou non
-- Si tu acceptes une invitation, tu auras accès à un salon dans la catégorie #soirées
+### :speech_left: Général
+Cette catégorie est là pour permettre aux membres du serveur de discuter de jeux de société, mais aussi de n'importe quoi d'autre. \
+N'hésite pas à demander la création d'un salon si tu souhaites discuter d'un sujet en particulier.
+
+### :envelope: Invitations
+Si quelqu'un t'invite à un événement qu'il a créé, tu aura accès à un salon dans cette catégorie dans lequel tu pourras accepter cette invitation en \
+réagissant à un message.
+
+### :tada: Soirées
+Si tu acceptes une invitation à une soirée (et qu'il reste de la place), tu auras accès à un salon dans cette catégorie dans lequel tu pourras discuter avec \
+les autres membres du serveur participant à cette soirée.
+
+### :page_facing_up: Logs
+Si tu crées un événement, tu auras accès à un salon dans cette catégorie dans lequel je t'informerai de ce qu'il se passe à propos de cet événement \
+(quels membres tu as invité, quels membres ont accepté l'invitation, etc.)
+
+
 """,
     "règles": """# :scroll: Règles du serveur
 
