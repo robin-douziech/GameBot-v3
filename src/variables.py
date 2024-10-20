@@ -124,7 +124,7 @@ les voulez et avez quelques années de libre devant vous pour les étudier, elle
 
 (Ceux qui ont la ref des deux dernières règles levez la main :raised_hand:)
 
-En cas de non-respect de ces règles, {owner_mention} sera colère tout rouge :rage: et sanctionnera les contrevenants à coups de bâton <:baton:1297299703045816330>
+En cas de non-respect de ces règles, {owner_mention} sera colère tout rouge :rage: et sanctionnera les contrevenants à coups de bâton <:baton:1297501386916761600>
 
 Veuillez signer (:pencil:) ce message pour avoir accès au reste du serveur
 

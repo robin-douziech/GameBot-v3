@@ -30,7 +30,7 @@ def get_role_by_name(role_name: str) :
 
 def get_time_ago(delta: str) :
     (day, month, year) = bot.get_current_datetime()[:3]
-    current_date = dt.datetime(year, month, day)
+    current_date = dt.datetime(2000+int(year), int(month), int(day))
     m = re.search("^(\d+) (day|month|year)[s]{0,1}$", delta)
     date: dt.datetime = None
     match m.group(2) :

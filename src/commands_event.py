@@ -165,7 +165,10 @@ async def uninvite_gamebot(ctx: commands.Context, *args, **kwargs) :
                     if (member.id in bot.vars["events"][event_idstr]["invited_members"]) and member != host :
                         try :
                             await bot.uninvite_member(event_idstr, member)
-                            await bot.send(ctx.channel, f"Invitation à la soirée {bot.vars['events'][event_idstr]['name']} annulée pour {member.display_name}")
+                            msg = f"Invitation à la soirée {bot.vars['events'][event_idstr]['name']} annulée pour {member.display_name}."
+                            if bot.member_is_invited_to_event(event_idstr, member) :
+                                msg += f" {member.display_name} est cependant toujours invité(e) via l'un de ses rôles."
+                            await bot.send(ctx.channel, msg)
                         except Exception as e :
                             await bot.send(ctx.channel, f"Quelque chose s'est mal passé pendant l'annulation de l'invitation de {member.display_name}")
                             raise Exception(e)

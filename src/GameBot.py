@@ -23,19 +23,19 @@ class GameBot(commands.Bot) :
 
         self.messages: dict[str, discord.Message] = {}
 
-        self.birthday_datetimes = []
+        self.birthday_datetimes: list[str] = []
         self.rules_message: discord.Message = None
         self.rules_reaction: discord.Reaction = None
         self.members_having_accepted_rules: list[discord.Member] = []
         
-        self.config_filename = "json/config.json"
-        self.config = {}
+        self.config_filename: str = "json/config.json"
+        self.config: dict[str, any] = {}
 
         self.overwrites_none = discord.PermissionOverwrite()
         for perm in discord.Permissions() :
             setattr(self.overwrites_none, perm[0], False)
 
-        self.vars = {
+        self.vars: dict[str, dict[str, any]] = {
             'members': {},
             'roles': {},
             'events': {}
@@ -95,9 +95,7 @@ class GameBot(commands.Bot) :
             self.write_json("events")
 
             # on lui donne accès au salon de la soirée
-            overwrite = copy.deepcopy(self.overwrites_none)
-            overwrite.update(**EVENT_CHANNEL_PERMISSIONS["soirées"])
-            await self.channels[f"soirées_{event_idstr}"].set_permissions(member, overwrite=overwrite)
+            await self.update_permissions_on_event_channels(member=member)
 
             await self.send(member.dm_channel, f"### :white_check_mark: Tu es sorti(e) de la liste d'attente pour la soirée {self.vars['events'][event_idstr]['name']} :white_check_mark:\nTu fais donc maintenant partie des personnes qui seront présentes à cette soirée et tu as accès au salon {self.channels[f'soirées_{event_idstr}'].mention}. Tu peux toujours annuler ta venue à cette soirée en retirant ta réaction au message d'invitation ici {self.channels[f'invitations_{event_idstr}'].mention}\n\u200B")
             await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : liste d'attente --> présent(e)")
@@ -304,9 +302,7 @@ class GameBot(commands.Bot) :
             self.write_json("events")
 
             # on lui donne accès au salon d'invitation
-            overwrite = copy.deepcopy(self.overwrites_none)
-            overwrite.update(**EVENT_CHANNEL_PERMISSIONS["invitations"])
-            await self.channels[f"invitations_{event_idstr}"].set_permissions(member, overwrite=overwrite)
+            await self.update_permissions_on_event_channels(member=member)
 
             if len(msg) > 0 :
                 await self.send(self.channels[f"logs_{event_idstr}"], msg)
@@ -550,7 +546,7 @@ class GameBot(commands.Bot) :
             await self.remove_permissions_on_channel(self.channels[f"invitations_{event_idstr}"], member)
             await self.remove_permissions_on_channel(self.channels[f"soirées_{event_idstr}"], member)
 
-            await self.send(member.dm_channel, f"### :information: Tu as été retiré(e) des personnes invitées à la soirée {self.vars['events'][event_idstr]['name']}\nraison: tu ne possède plus aucun des rôles invités à cette soirée, soit parce que les rôles invités t'ont été retiré, soit parce que les rôles que tu possède ne sont plus invités")
+            await self.send(member.dm_channel, f"### :information: Tu as été retiré(e) des personnes invitées à la soirée {self.vars['events'][event_idstr]['name']}\nraison: tu ne possèdes plus aucun des rôles invités à cette soirée, soit parce que les rôles invités t'ont été retiré, soit parce que les rôles que tu possède ne sont plus invités")
             await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : présent --> pas invité(e)")
 
             await self.update_waiting_list(event_idstr)
@@ -572,7 +568,7 @@ class GameBot(commands.Bot) :
 
             await self.remove_permissions_on_channel(self.channels[f"invitations_{event_idstr}"], member)
 
-            await self.send(member.dm_channel, f"### :information: Tu as été retiré(e) des personnes invitées à la soirée {self.vars['events'][event_idstr]['name']}\nraison: tu ne possède plus aucun des rôles invités à cette soirée, soit parce que les rôles invités t'ont été retiré, soit parce que les rôles que tu possède ne sont plus invités")
+            await self.send(member.dm_channel, f"### :information: Tu as été retiré(e) des personnes invitées à la soirée {self.vars['events'][event_idstr]['name']}\nraison: tu ne possèdes plus aucun des rôles invités à cette soirée, soit parce que les rôles invités t'ont été retiré, soit parce que les rôles que tu possède ne sont plus invités")
             await self.send(self.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : liste d'attente --> pas invité(e)")
 
             await self.update_waiting_list(event_idstr)
@@ -620,17 +616,20 @@ class GameBot(commands.Bot) :
 
         if (event_idstr in self.vars["events"] and self.vars["events"][event_idstr]["created"]
             and member.id in self.vars["events"][event_idstr]["invited_members"]) and member != self.get_discord_member(event_idstr.split(':')[0]) :
-            
-            if f"{member.name}#{member.discriminator}" in self.vars["events"][event_idstr]["invited_guests"] :
-                await self.remove_member_from_invited_guests(event_idstr, member)
-
-            elif f"{member.name}#{member.discriminator}" in self.vars["events"][event_idstr]["waiting_guests"] :
-                await self.remove_member_from_waiting_guests(event_idstr, member)
-
-            elif f"{member.name}#{member.discriminator}" in self.vars["events"][event_idstr]["present_guests"] :
-                await self.remove_member_from_present_guests(event_idstr, member)
 
             self.vars["events"][event_idstr]["invited_members"].remove(member.id)
+
+            if not(self.member_is_invited_to_event(event_idstr, member)) :
+            
+                if f"{member.name}#{member.discriminator}" in self.vars["events"][event_idstr]["invited_guests"] :
+                    await self.remove_member_from_invited_guests(event_idstr, member)
+
+                elif f"{member.name}#{member.discriminator}" in self.vars["events"][event_idstr]["waiting_guests"] :
+                    await self.remove_member_from_waiting_guests(event_idstr, member)
+
+                elif f"{member.name}#{member.discriminator}" in self.vars["events"][event_idstr]["present_guests"] :
+                    await self.remove_member_from_present_guests(event_idstr, member)
+
             self.write_json("events")
 
         else:
@@ -657,12 +656,12 @@ class GameBot(commands.Bot) :
                     self.vars["events"][event_idstr]["waiting_guests"].remove(pseudo)
                     msg += f"Changement d'état pour '{member.display_name}' : liste d'attente --> pas invité(e) (le rôle {role.name} n'est plus invité)\n"
                     await (await self.get_all_messages_in_channel(self.channels[f"invitations_{event_idstr}"]))[-1].remove_reaction(chr(0x1F44D), member)
-                    await self.send(member.dm_channel, f"### :information: Tu as été retiré(e) des personnes invitées à la soirée {self.vars['events'][event_idstr]['name']}\nraison: tu ne possède plus aucun des rôles invités à cette soirée, soit parce que les rôles invités t'ont été retiré, soit parce que les rôles que tu possède ne sont plus invités")
+                    await self.send(member.dm_channel, f"### :information: Tu as été retiré(e) des personnes invitées à la soirée {self.vars['events'][event_idstr]['name']}\nraison: tu ne possèdes plus aucun des rôles invités à cette soirée, soit parce que les rôles invités t'ont été retiré, soit parce que les rôles que tu possède ne sont plus invités")
                 if pseudo in self.vars["events"][event_idstr]["present_guests"] :
                     self.vars["events"][event_idstr]["present_guests"].remove(pseudo)
                     msg += f"Changement d'état pour '{member.display_name}' : présent --> pas invité(e) (le rôle {role.name} n'est plus invité)\n"
                     await (await self.get_all_messages_in_channel(self.channels[f"invitations_{event_idstr}"]))[-1].remove_reaction(chr(0x1F44D), member)
-                    await self.send(member.dm_channel, f"### :information: Tu as été retiré(e) des personnes invitées à la soirée {self.vars['events'][event_idstr]['name']}\nraison: tu ne possède plus aucun des rôles invités à cette soirée, soit parce que les rôles invités t'ont été retiré, soit parce que les rôles que tu possède ne sont plus invités")
+                    await self.send(member.dm_channel, f"### :information: Tu as été retiré(e) des personnes invitées à la soirée {self.vars['events'][event_idstr]['name']}\nraison: tu ne possèdes plus aucun des rôles invités à cette soirée, soit parce que les rôles invités t'ont été retiré, soit parce que les rôles que tu possède ne sont plus invités")
                     await self.remove_permissions_on_channel(self.channels[f"soirées_{event_idstr}"], member)
             self.vars["events"][event_idstr]["invited_roles"].remove(role.id)
             self.write_json("events")
@@ -702,19 +701,19 @@ class GameBot(commands.Bot) :
                     await self.remove_permissions_on_channel(self.channels[f"logs_{event_idstr}"], host)
 
                 # pour chaque invité ...
-                for member_id in self.vars["events"][event_idstr]["invited_members"] :
+                for member in [m for m in self.guild.members if not(m.bot) and self.member_is_invited_to_event(event_idstr, m)] :
                     
-                    member = self.guild.get_member(member_id)
                     pseudo = f"{member.name}#{member.discriminator}"
                     can_see_channels = members_can_see_channels and (self.channels["règles"] is None or member in self.members_having_accepted_rules) and not(self.vars["members"][pseudo]["banned"])
 
                     # on ajuste les permissions du salon d'invitation
-                    if can_see_channels :
-                        overwrite = copy.deepcopy(self.overwrites_none)
-                        overwrite.update(**EVENT_CHANNEL_PERMISSIONS["invitations"])
-                        await self.channels[f"invitations_{event_idstr}"].set_permissions(member, overwrite=overwrite)
-                    else :
-                        await self.remove_permissions_on_channel(self.channels[f"invitations_{event_idstr}"], member)
+                    if member.id in self.vars["events"][event_idstr]["invited_members"] :
+                        if can_see_channels :
+                            overwrite = copy.deepcopy(self.overwrites_none)
+                            overwrite.update(**EVENT_CHANNEL_PERMISSIONS["invitations"])
+                            await self.channels[f"invitations_{event_idstr}"].set_permissions(member, overwrite=overwrite)
+                        else :
+                            await self.remove_permissions_on_channel(self.channels[f"invitations_{event_idstr}"], member)
                     
                     # on ajuste les permissions du salon de la soirée
                     if pseudo in self.vars["events"][event_idstr]["present_guests"] :
@@ -741,7 +740,7 @@ class GameBot(commands.Bot) :
                     else :
                         await self.remove_permissions_on_channel(self.channels[f"logs_{event_idstr}"], member)
 
-                # si le membre est invité
+                # si le membre est invité (personellement)
                 if member.id in self.vars["events"][event_idstr]["invited_members"] :
 
                     if can_see_channels :
@@ -751,14 +750,14 @@ class GameBot(commands.Bot) :
                     else :
                         await self.remove_permissions_on_channel(self.channels[f"invitations_{event_idstr}"], member)
 
-                    # si le membre est présent à la soirée
-                    if pseudo in self.vars["events"][event_idstr]["present_guests"] :
-                        if can_see_channels :
-                            overwrite = copy.deepcopy(self.overwrites_none)
-                            overwrite.update(**EVENT_CHANNEL_PERMISSIONS["soirées"])
-                            await self.channels[f"soirées_{event_idstr}"].set_permissions(member, overwrite=overwrite)
-                        else :
-                            await self.remove_permissions_on_channel(self.channels[f"soirées_{event_idstr}"], member)
+                # si le membre est présent à la soirée
+                if pseudo in self.vars["events"][event_idstr]["present_guests"] :
+                    if can_see_channels :
+                        overwrite = copy.deepcopy(self.overwrites_none)
+                        overwrite.update(**EVENT_CHANNEL_PERMISSIONS["soirées"])
+                        await self.channels[f"soirées_{event_idstr}"].set_permissions(member, overwrite=overwrite)
+                    else :
+                        await self.remove_permissions_on_channel(self.channels[f"soirées_{event_idstr}"], member)
 
     async def update_waiting_list(self, event_idstr: str) :
 

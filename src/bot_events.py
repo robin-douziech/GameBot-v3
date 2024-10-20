@@ -43,7 +43,7 @@ async def on_ready():
     # création ou récupération des rôles
     for role_name in ROLES_IDS :
         if bot.guild.get_role(ROLES_IDS[role_name]) is None :
-            if not(role_name in [role.name for role in bot.guild.roles]) :
+            if get_role_by_name(role_name) is None :
 
                 role = await bot.guild.create_role(name=role_name)
                 while role is None :
@@ -63,7 +63,7 @@ async def on_ready():
     # création ou récupération des catégories
     for category_name in CATEGORY_IDS :
         if discord.utils.get(bot.guild.categories, id=CATEGORY_IDS[category_name]) is None :
-            if not(category_name in [category.name for category in bot.guild.categories]) :
+            if get_category_by_name(category_name) is None :
 
                 category = await bot.guild.create_category(name=category_name.upper(), overwrites={
                     bot.guild.default_role: bot.overwrites_none
@@ -92,7 +92,7 @@ async def on_ready():
         for channel_name in CHANNELS_BY_ROLE[role_name] :
             if ((bot.config["règles"] or channel_name != "règles")) :
                 if (bot.guild.get_channel(CHANNEL_IDS[channel_name]) is None) :
-                    if not(channel_name in [channel.name for channel in bot.guild.channels]) :
+                    if get_channel_by_name(channel_name) is None :
 
                         channel = await bot.guild.create_text_channel(channel_name, overwrites={
                             bot.guild.get_role(ROLES_IDS[role_name]): overwrite,
@@ -294,12 +294,12 @@ async def on_ready():
                     bot.vars["events"][event_idstr]["waiting_guests"].remove(pseudo)
                     msg += f"Changement d'état pour '{member.display_name}' : liste d'attente --> pas invité(e)\n"
                     await (await bot.get_all_messages_in_channel(bot.channels[f"invitations_{event_idstr}"]))[-1].remove_reaction(chr(0x1F44D), member)
-                    await bot.send(member.dm_channel, f"### :information: Tu as été retiré(e) des personnes invitées à la soirée {bot.vars['events'][event_idstr]['name']}\nraison: tu ne possède plus aucun des rôles invités à cette soirée, soit parce que les rôles invités t'ont été retiré, soit parce que les rôles que tu possède ne sont plus invités")
+                    await bot.send(member.dm_channel, f"### :information: Tu as été retiré(e) des personnes invitées à la soirée {bot.vars['events'][event_idstr]['name']}\nraison: tu ne possèdes plus aucun des rôles invités à cette soirée, soit parce que les rôles invités t'ont été retiré, soit parce que les rôles que tu possède ne sont plus invités")
                 elif pseudo in bot.vars["events"][event_idstr]["present_guests"] :
                     bot.vars["events"][event_idstr]["present_guests"].remove(pseudo)
                     msg += f"Changement d'état pour '{member.display_name}' : présent --> pas invité(e)\n"
                     await (await bot.get_all_messages_in_channel(bot.channels[f"invitations_{event_idstr}"]))[-1].remove_reaction(chr(0x1F44D), member)
-                    await bot.send(member.dm_channel, f"### :information: Tu as été retiré(e) des personnes invitées à la soirée {bot.vars['events'][event_idstr]['name']}\nraison: tu ne possède plus aucun des rôles invités à cette soirée, soit parce que les rôles invités t'ont été retiré, soit parce que les rôles que tu possède ne sont plus invités")
+                    await bot.send(member.dm_channel, f"### :information: Tu as été retiré(e) des personnes invitées à la soirée {bot.vars['events'][event_idstr]['name']}\nraison: tu ne possèdes plus aucun des rôles invités à cette soirée, soit parce que les rôles invités t'ont été retiré, soit parce que les rôles que tu possède ne sont plus invités")
                     await bot.remove_permissions_on_channel(bot.channels[f"soirées_{event_idstr}"], member)
         
         if len(msg) > 0 :
@@ -480,12 +480,12 @@ async def on_member_update(before: discord.Member, after: discord.Member) :
                             bot.vars["events"][event_idstr]["waiting_guests"].remove(pseudo)
                             msg = f"Changement d'état pour '{after.display_name}' : liste d'attente --> pas invité(e) (suppression du rôle '{role.name}')"
                             await (await bot.get_all_messages_in_channel(bot.channels[f"invitations_{event_idstr}"]))[-1].remove_reaction(chr(0x1F44D), after)
-                            await bot.send(after.dm_channel, f"### :information: Tu as été retiré(e) des personnes invitées à la soirée {bot.vars['events'][event_idstr]['name']}\nraison: tu ne possède plus aucun des rôles invités à cette soirée, soit parce que les rôles invités t'ont été retiré, soit parce que les rôles que tu possède ne sont plus invités")
+                            await bot.send(after.dm_channel, f"### :information: Tu as été retiré(e) des personnes invitées à la soirée {bot.vars['events'][event_idstr]['name']}\nraison: tu ne possèdes plus aucun des rôles invités à cette soirée, soit parce que les rôles invités t'ont été retiré, soit parce que les rôles que tu possède ne sont plus invités")
                         elif pseudo in bot.vars["events"][event_idstr]["present_guests"] :
                             bot.vars["events"][event_idstr]["present_guests"].remove(pseudo)
                             msg = f"Changement d'état pour '{after.display_name}' : présent --> pas invité(e) (suppression du rôle '{role.name}')"
                             await (await bot.get_all_messages_in_channel(bot.channels[f"invitations_{event_idstr}"]))[-1].remove_reaction(chr(0x1F44D), after)
-                            await bot.send(after.dm_channel, f"### :information: Tu as été retiré(e) des personnes invitées à la soirée {bot.vars['events'][event_idstr]['name']}\nraison: tu ne possède plus aucun des rôles invités à cette soirée, soit parce que les rôles invités t'ont été retiré, soit parce que les rôles que tu possède ne sont plus invités")
+                            await bot.send(after.dm_channel, f"### :information: Tu as été retiré(e) des personnes invitées à la soirée {bot.vars['events'][event_idstr]['name']}\nraison: tu ne possèdes plus aucun des rôles invités à cette soirée, soit parce que les rôles invités t'ont été retiré, soit parce que les rôles que tu possède ne sont plus invités")
                             await bot.remove_permissions_on_channel(bot.channels[f"soirées_{event_idstr}"], after)
                         bot.write_json("events")
 
@@ -530,6 +530,5 @@ async def on_member_update(before: discord.Member, after: discord.Member) :
 @bot.event
 async def on_error(*args, **kwargs):
     info = sys.exc_info()
-    bot.log(f"error type : {info[0]}\nerror value :{info[1]}\nerror traceback : {str(info[2])}\n", 'error')
-    await bot.send(bot.owner.dm_channel, f"error type : {info[0]}\nerror value :{info[1]}\nerror traceback : {str(info[2])}\n", wrappers=('```', '```'))
-    traceback.print_exception()
+    bot.log(f"{traceback.extract_stack()}", 'error')
+    await bot.send(bot.owner.dm_channel, f"{traceback.extract_stack()}", wrappers=('```', '```'))

@@ -35,10 +35,10 @@ async def clock() :
             days_files = os.listdir(f"logs/{date.year}/{date.month}")
             for _day in days_files :
                 if int(_day.split('.')[0]) < date.day :
-                    os.remove(f"logs/{date.year}/{date.month}/{'0' if int(_day) < 10 else ''}{_day}.log")
+                    os.remove(f"logs/{date.year}/{date.month}/{_day}")
             for _month in months_dirs :
                 if int(_month) < date.month :
-                    shutil.rmtree(f"logs/{date.year}/{'0' if int(_month) < 10 else ''}{_month}")     
+                    shutil.rmtree(f"logs/{date.year}/{_month}")     
             for _year in years_dirs :
                 if int(_year) < date.year :
                     shutil.rmtree(f"logs/{_year}")
