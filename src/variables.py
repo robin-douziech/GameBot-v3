@@ -103,7 +103,8 @@ les autres membres du serveur participant à cette soirée.
 Si tu crées un événement, tu auras accès à un salon dans cette catégorie dans lequel je t'informerai de ce qu'il se passe à propos de cet événement \
 (quels membres tu as invité, quels membres ont accepté l'invitation, etc.)
 
-
+### :robot: Bot
+Dans cette catégorie, tu auras accès à un salon te permettant d'envoyer des commandes à GameBot (tu peux aussi le faire en messages privés avec GameBot)
 """,
     "règles": """# :scroll: Règles du serveur
 
