@@ -151,12 +151,13 @@ async def maintenance_gamebot(ctx: commands.Context, *args, **kwargs) :
             for member in [m for m in bot.guild.members if not(m.bot)] :
 
                 # on rend les permissions sur son salon privé avec le bot
+                permissions = bot.config["maintenance"] == "down" and (bot.channels["règles"] is None or member in bot.members_having_accepted_rules) and not(bot.vars["members"][f"{member.name}#{member.discriminator}"]["banned"])
                 overwrite = copy.deepcopy(bot.overwrites_none)
                 overwrite.update(
-                    read_messages=True,
-                    send_messages=True,
-                    mention_everyone=True,
-                    read_message_history=True
+                    read_messages=permissions,
+                    send_messages=permissions,
+                    mention_everyone=permissions,
+                    read_message_history=permissions
                 )
                 await bot.channels[f"bot_{member.name}#{member.discriminator}"].set_permissions(member, overwrite=overwrite)
 
