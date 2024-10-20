@@ -45,11 +45,10 @@ class GameBot(commands.Bot) :
 
         self.files = {x: f"json/{x}.json" for x in self.vars}
 
+        os.makedirs("json", exist_ok=True)
         for var_name in self.vars :
             if not(os.path.exists(self.files[var_name])) :
-                with open(self.files[var_name], "w") :
-                    pass
-            self.write_json(var_name)
+                self.write_json(var_name)
         for string in ["config", "messages", "ids_test", "ids_prod"] :
             if not(os.path.exists(f"json/{string}.json")) :
                 with open(f"json/{string}.json", "x") as f :
