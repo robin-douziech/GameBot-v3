@@ -385,12 +385,13 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent) :
 
                     await bot.update_permissions_on_event_channels(member=author)
 
+                    permissions = bot.config["maintenance"] == "down" and (bot.channels["règles"] is None or author in bot.members_having_accepted_rules) and not(bot.vars["members"][f"{author.name}#{author.discriminator}"]["banned"])
                     overwrites = copy.deepcopy(bot.overwrites_none)
                     overwrites.update(
-                        read_messages=True,
-                        send_messages=True,
-                        mention_everyone=True,
-                        read_message_history=True
+                        read_messages=permissions,
+                        send_messages=permissions,
+                        mention_everyone=permissions,
+                        read_message_history=permissions
                     )
                     await bot.channels[f"bot_{author.name}#{author.discriminator}"].set_permissions(author, overwrite=overwrites)
 
