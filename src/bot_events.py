@@ -347,7 +347,7 @@ async def on_message(message: discord.Message) :
         and (bot.channels["règles"] is None or author in bot.members_having_accepted_rules)
         and (bot.config["maintenance"] == "down" or author.get_role(ROLES_IDS["admin"]) is not None)
         and not(bot.vars["members"][f"{author.name}#{author.discriminator}"]["banned"])) :
-        if bot.config['maintenance'] == "down" or message.content == "!maintenance down" :
+        if bot.config['maintenance'] == "down" or message.content == "!maintenance down" or message.content == "!kill" :
             if message.content.startswith(bot.command_prefix) :
                 await bot.process_commands(message)
             elif message.channel == author.dm_channel or message.channel == bot.channels[f"bot_{author.name}#{author.discriminator}"] :
