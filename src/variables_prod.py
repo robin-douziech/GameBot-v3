@@ -10,7 +10,6 @@ CATEGORY_IDS = {
 }
 
 CHANNEL_IDS = {
-    "bienvenue": 0,
     "informations" : 0,
     "règles": 0,
     "annonces": 0,

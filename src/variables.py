@@ -13,7 +13,7 @@ RETRY_TIMEOUT = 1
 
 ROLES_TO_IGNORE = ["base", "7tadellien", "maintenance", "admin"]
 CHANNELS_BY_ROLE = {
-    "base": ["bienvenue", "informations", "règles"],
+    "base": ["informations", "règles"],
     "7tadellien": ["annonces", "anniversaires"],
     "maintenance": ["maintenance"],
     "admin": ["logsgamebot"]
