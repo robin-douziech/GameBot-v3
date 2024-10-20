@@ -453,9 +453,14 @@ async def on_member_update(before: discord.Member, after: discord.Member) :
         # suppression de rôle
         for role in [r for r in before.roles if not(r in after.roles)] :
 
-            if ((bot.guild.get_role(ROLES_IDS["base"]) is not None and role.id == ROLES_IDS["base"] and bot.config["maintenance"] == "down")
-                or (bot.guild.get_role(ROLES_IDS["maintenance"]) is not None and role.id == ROLES_IDS["maintenance"] and bot.config["maintenance"] == "up")) :
-                await after.add_roles(role)
+            try :
+                if ((bot.guild.get_role(ROLES_IDS["base"]) is not None and role.id == ROLES_IDS["base"] and bot.config["maintenance"] == "down")
+                    or (bot.guild.get_role(ROLES_IDS["maintenance"]) is not None and role.id == ROLES_IDS["maintenance"] and bot.config["maintenance"] == "up")) :
+                    await after.add_roles(role)
+            except discord.errors.NotFound as e :
+                pass
+            except Exception as e :
+                raise Exception(e)
 
             # si le rôle était invité à une soirée, on désinvite le membre (uniquement s'il n'était invité que via ce rôle)
             if not(role.id in [
