@@ -531,5 +531,5 @@ async def on_member_update(before: discord.Member, after: discord.Member) :
 @bot.event
 async def on_error(*args, **kwargs):
     info = sys.exc_info()
-    bot.log(f"{traceback.extract_stack()}", 'error')
-    await bot.send(bot.owner.dm_channel, f"{traceback.extract_stack()}", wrappers=('```', '```'))
+    bot.log(f"{traceback.format_exc()}", 'error')
+    await bot.send(bot.owner.dm_channel, f"{traceback.format_exc()}", wrappers=('```', '```'))
