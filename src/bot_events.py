@@ -336,8 +336,8 @@ async def on_ready():
 @bot.event
 async def on_message(message: discord.Message) :
     author = bot.guild.get_member(message.author.id)
-    if (not(author.bot)
-        and author in bot.guild.members
+    if (author is not None
+        and not(author.bot)
         and (bot.channels["règles"] is None or author in bot.members_having_accepted_rules)
         and (bot.config["maintenance"] == "down" or author.get_role(ROLES_IDS["admin"]) is not None)
         and not(bot.vars["members"][f"{author.name}#{author.discriminator}"]["banned"])) :
