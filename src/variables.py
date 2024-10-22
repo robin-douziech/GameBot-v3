@@ -306,9 +306,7 @@ Le paramètre guest peut être l'identifiant du membre ou son pseudo (celui que 
 
 __Si tu désinvites un rôle__ :
 
-Le paramètre guest doit être la mention du rôle (tu dois mentionner le rôle). Je te conseille donc d'utiliser cette commande \
-depuis ton salon avec le bot dans le serveur et non en messages privés pour pouvoir mentionner le rôle. Tous les membres \
-invités à la soirées et ayant été invité uniquement via ce rôle seront désinvités.
+Le paramètre guest peut être l'identifiant du rôle ou son nom
 
 Exemple :
 
