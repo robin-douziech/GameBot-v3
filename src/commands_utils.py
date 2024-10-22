@@ -31,9 +31,6 @@ async def ban_gamebot(ctx: commands.Context, *args, **kwargs) :
                     # on lui retire l'accès aux salon des soirées auxquelles il est invitées
                     await bot.update_permissions_on_event_channels(member=member)
 
-                    # on lui retire l'accès à son salon privé avec le bot
-                    await bot.remove_permissions_on_channel(bot.channels[f"bot_{pseudo}"], member)
-
                     bot.write_json("members")
                     bot.write_config()
 
@@ -127,9 +124,6 @@ async def maintenance_gamebot(ctx: commands.Context, *args, **kwargs) :
 
             for member in [m for m in bot.guild.members if not(m.bot)] :
 
-                # on retire les permissions sur son salon privé avec le bot
-                await bot.remove_permissions_on_channel(bot.channels[f"bot_{member.name}#{member.discriminator}"], member)
-
                 # on garde une trace des roles du membre et on les retire
                 await backup_roles(bot.config["maintenance_roles_backup"][f"{member.name}#{member.discriminator}"], member, remove=True)
 
@@ -149,17 +143,6 @@ async def maintenance_gamebot(ctx: commands.Context, *args, **kwargs) :
             bot.config["maintenance"] = "down"
 
             for member in [m for m in bot.guild.members if not(m.bot)] :
-
-                # on rend les permissions sur son salon privé avec le bot
-                permissions = bot.config["maintenance"] == "down" and (bot.channels["règles"] is None or member in bot.members_having_accepted_rules) and not(bot.vars["members"][f"{member.name}#{member.discriminator}"]["banned"])
-                overwrite = copy.deepcopy(bot.overwrites_none)
-                overwrite.update(
-                    read_messages=permissions,
-                    send_messages=permissions,
-                    mention_everyone=permissions,
-                    read_message_history=permissions
-                )
-                await bot.channels[f"bot_{member.name}#{member.discriminator}"].set_permissions(member, overwrite=overwrite)
 
                 await member.remove_roles(bot.roles["maintenance"])
                 await member.add_roles(bot.roles["base"])
@@ -231,18 +214,6 @@ async def unban_gamebot(ctx: commands.Context, *args, **kwargs) :
                             if member.get_role(ROLES_IDS["maintenance"]) is not None :
                                 await member.remove_roles(bot.roles["maintenance"])
 
-                            # on donne l'accès au salon privé avec le bot (s'il a accepté les règles)
-                            permissions = bot.config["maintenance"] == "down" and (bot.channels["règles"] is None or member in bot.members_having_accepted_rules) and not(bot.vars["members"][f"{member.name}#{member.discriminator}"]["banned"])
-                            if (bot.channels["règles"] is None or member in bot.members_having_accepted_rules) :
-                                overwrite = copy.deepcopy(bot.overwrites_none)
-                                overwrite.update(
-                                    read_messages=permissions,
-                                    send_messages=permissions,
-                                    mention_everyone=permissions,
-                                    read_message_history=permissions
-                                )
-                                await bot.channels[f"bot_{pseudo}"].set_permissions(member, overwrite=overwrite)
-
                         else :
 
                             # on retire le rôle "base" s'il l'a
@@ -256,9 +227,6 @@ async def unban_gamebot(ctx: commands.Context, *args, **kwargs) :
                             # on donne le rôle "maintenance" s'il ne l'a pas
                             if member.get_role(ROLES_IDS["maintenance"]) is None :
                                 await member.add_roles(bot.roles["maintenance"])
-
-                            # on retire l'accès au salon privé avec le bot
-                            await bot.remove_permissions_on_channel(bot.channels[f"bot_{pseudo}"], member)
 
                         # on restitue les rôles en backup
                         for role_id in bot.config["ban_roles_backup"][pseudo] :
