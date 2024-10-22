@@ -77,9 +77,6 @@ class GameBot(commands.Bot) :
             if self.channels["règles"] is None :
                 await discord_member.add_roles(self.roles["7tadellien"])
 
-            # on lui crée son salon de discussion avec le bot
-            await self.create_command_channel_for_member(self.get_discord_member(pseudo))
-
             self.write_json("members")
             self.write_config()
 
@@ -164,27 +161,6 @@ class GameBot(commands.Bot) :
 
             await self.send(self.channels["logsgamebot"], f"Je ne peux pas annuler la participation de {member.display_name} à la soirée {self.vars['events'][event_idstr]['name']} (event_idstr = {event_idstr})")
             raise Exception(f"Cannot cancel participation of member '{member.name}#{member.discriminator}' to the event with id '{event_idstr}'")
-
-    async def create_command_channel_for_member(self, member: discord.Member) :
-        """Create the member's command channel with appropriate permissions (depending on maintenance status and rules acceptation)"""
-        permissions = self.config["maintenance"] == "down" and (self.channels["règles"] is None or member in self.members_having_accepted_rules) and not(self.vars["members"][f"{member.name}#{member.discriminator}"]["banned"])
-        member_permissions = {
-            "read_messages": permissions,
-            "send_messages": permissions,
-            "mention_everyone": permissions,
-            "read_message_history": permissions
-        }
-        overwrites = copy.deepcopy(self.overwrites_none)
-        overwrites.update(**member_permissions)
-        self.channels[f"bot_{member.name}#{member.discriminator}"] = await self.guild.create_text_channel(
-            name="utilise-gamebot-ici",
-            category=self.categories["bot"],
-            topic=f"{member.name}#{member.discriminator}",
-            overwrites={
-                member: overwrites,
-                self.guild.default_role: self.overwrites_none
-            }
-        )
     
     async def delete_event(self, event_idstr: str) :
 
@@ -493,12 +469,6 @@ class GameBot(commands.Bot) :
                     await self.update_waiting_list(event_idstr)
                     if len(msg) > 0 :
                         await self.send(self.channels[f"logs_{event_idstr}"], msg)
-
-                # on supprime son salon privé avec le bot
-                if f"bot_{pseudo}" in self.channels :
-                    if self.channels[f"bot_{pseudo}"] is not None :
-                        await self.channels[f"bot_{pseudo}"].delete()
-                    self.channels.pop(f"bot_{pseudo}")
 
                 for member in self.members_having_accepted_rules :
                     if member.id == member_id :

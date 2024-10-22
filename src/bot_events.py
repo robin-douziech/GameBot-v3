@@ -200,10 +200,6 @@ async def on_ready():
             members_to_remove.append(pseudo)
     await bot.add_members(members_to_add)
     await bot.remove_members(members_to_remove)
-
-    # salon pour utiliser le bot
-    for channel in bot.categories["bot"].channels :
-        await channel.delete()
     
     # Gestion des rôles
     if bot.config["maintenance"] == "down" :
@@ -263,9 +259,6 @@ async def on_ready():
                 await member.remove_roles(bot.roles["base"])
             if member.get_role(ROLES_IDS["maintenance"]) is None :
                 await member.add_roles(bot.roles["maintenance"])
-
-    for member in [m for m in bot.guild.members if not(m.bot)] :
-        await bot.create_command_channel_for_member(member)
 
     # gestion des permissions sur les salons des soirées
     await bot.update_permissions_on_event_channels()
@@ -350,7 +343,7 @@ async def on_message(message: discord.Message) :
         if bot.config['maintenance'] == "down" or message.content == "!maintenance down" or message.content == "!kill" :
             if message.content.startswith(bot.command_prefix) :
                 await bot.process_commands(message)
-            elif message.channel == author.dm_channel or message.channel == bot.channels[f"bot_{author.name}#{author.discriminator}"] :
+            elif message.channel == author.dm_channel :
                 await bot.process_msg(message)
         else :
             await bot.send(message.channel, "Pas pendant une maintenance...")
@@ -385,16 +378,6 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent) :
 
                     await bot.update_permissions_on_event_channels(member=author)
 
-                    permissions = bot.config["maintenance"] == "down" and (bot.channels["règles"] is None or author in bot.members_having_accepted_rules) and not(bot.vars["members"][f"{author.name}#{author.discriminator}"]["banned"])
-                    overwrites = copy.deepcopy(bot.overwrites_none)
-                    overwrites.update(
-                        read_messages=permissions,
-                        send_messages=permissions,
-                        mention_everyone=permissions,
-                        read_message_history=permissions
-                    )
-                    await bot.channels[f"bot_{author.name}#{author.discriminator}"].set_permissions(author, overwrite=overwrites)
-
                     for role_id in bot.config["rules_roles_backup"][f"{author.name}#{author.discriminator}"] :
                         await author.add_roles(bot.guild.get_role(role_id))
                     bot.config["rules_roles_backup"][f"{author.name}#{author.discriminator}"] = []
@@ -427,7 +410,6 @@ async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent) :
             if payload.emoji.name == chr(0x1F4DD) :
                 bot.members_having_accepted_rules.remove(author)
                 if not(bot.vars["members"][f"{author.name}#{author.discriminator}"]["banned"]) :
-                    await bot.remove_permissions_on_channel(bot.channels[f"bot_{author.name}#{author.discriminator}"], author)
                     await bot.update_permissions_on_event_channels(member=author)
                     await author.remove_roles(bot.roles["7tadellien"])
                     await backup_roles(bot.config["rules_roles_backup"][f"{author.name}#{author.discriminator}"], author, remove=True)
