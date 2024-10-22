@@ -110,8 +110,7 @@ async def invite_gamebot(ctx: commands.Context, *args, **kwargs) :
             # inviter un membre
             for pseudo in bot.vars["members"] :
                 member = bot.get_discord_member(pseudo)
-                if (args[1] == member.mention
-                    or (re.match(r"^(\d+)$", args[1]) and int(args[1]) == member.id)
+                if ((re.match(r"^(\d+)$", args[1]) and int(args[1]) == member.id)
                     or (target == member.display_name and len([m.display_name for m in bot.guild.members if m.display_name == target]) == 1)) :
                     if not(member.id in bot.vars["events"][event_idstr]["invited_members"]) :
                         try :
@@ -124,7 +123,8 @@ async def invite_gamebot(ctx: commands.Context, *args, **kwargs) :
 
             # inviter un rôle
             for role in bot.guild.roles :
-                if args[1] == role.mention :
+                if ((re.match(r"^(\d+)$", args[1]) and int(args[1]) == role.id)
+                    or (target == role.name and len([r.name for r in bot.guild.roles if r.name == target]) == 1)) :
                     if not(role.id in bot.vars["events"][event_idstr]["invited_roles"]) :
                         try :
                             await bot.invite_role(event_idstr, role)
@@ -159,8 +159,7 @@ async def uninvite_gamebot(ctx: commands.Context, *args, **kwargs) :
             # désinviter un membre
             for pseudo in bot.vars["members"] :
                 member = bot.get_discord_member(pseudo)
-                if (args[1] == member.mention
-                    or (re.match(r"^(\d+)$", args[1]) and int(args[1]) == member.id)
+                if ((re.match(r"^(\d+)$", args[1]) and int(args[1]) == member.id)
                     or (target == member.display_name and len([m.display_name for m in bot.guild.members if m.display_name == target]) == 1)) :
                     if (member.id in bot.vars["events"][event_idstr]["invited_members"]) and member != host :
                         try :
@@ -176,7 +175,8 @@ async def uninvite_gamebot(ctx: commands.Context, *args, **kwargs) :
 
             # désinviter un rôle
             for role in bot.guild.roles :
-                if args[1] == role.mention :
+                if ((re.match(r"^(\d+)$", args[1]) and int(args[1]) == role.id)
+                    or (target == role.name and len([r.name for r in bot.guild.roles if r.name == target]) == 1)) :
                     if (role.id in bot.vars["events"][event_idstr]["invited_roles"]) :
                         try :
                             await bot.uninvite_role(event_idstr, role)
