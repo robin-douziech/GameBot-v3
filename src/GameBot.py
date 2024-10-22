@@ -362,18 +362,15 @@ class GameBot(commands.Bot) :
                 or member.id in self.vars["events"][event_idstr]["invited_members"])
             
     def private_command(self, function: callable) :
-        """ Decorator to apply to a command so it can only be sent in the dedicated private channel """
+        """ Decorator to apply to a command so it can only be sent by private message"""
         async def wrapper(ctx: commands.Context, *args, **kwargs):
             author = self.guild.get_member(ctx.author.id)
-            if not(f"bot_{author.name}#{author.discriminator}" in self.channels) :
-                await self.create_command_channel_for_member(author)
-            if ctx.channel == self.channels[f"bot_{author.name}#{author.discriminator}"] or ctx.channel == author.dm_channel :
+            if ctx.channel == author.dm_channel :
                 await function(ctx, *args, **kwargs)
             else :
                 message = await ctx.channel.fetch_message(ctx.message.id)
                 await ctx.channel.delete_messages([message])
-                await self.send(self.channels[f"bot_{author.name}#{author.discriminator}"], f"Pour utiliser mes commandes, ça se passe ici ou par messages privés")
-                await self.send(author.dm_channel, f"Pour utiliser mes commandes, ça se passe ici ... ou là bas {self.channels[f'bot_{author.name}#{author.discriminator}'].mention}")
+                await self.send(author.dm_channel, f"Je ne répond qu'aux commandes qui me sont envoyées par message privé")
         return wrapper
             
     async def process_msg(self, message: discord.Message) :
