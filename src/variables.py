@@ -183,7 +183,7 @@ Si tu ne veux pas que j'annonce ton anniversaire, envoie-moi 0.
         },
         "description": {
             "text": "Donne-moi une description pour cette soirée. Celle-ci sera partagée avec les invités de la soirée",
-            "valid": r"^(.+)$"
+            "valid": r"^((.|\n)+)$"
         },
         "host": {
             "text": "Sous quel nom veux-tu que je t'appelle dans le message d'annonce de la soirée ? Cela peut servir si certains invités ne connaissent pas ton pseudo. Si tu veux que je donne uniquement ton pseudo, envoie-moi \".\"",
