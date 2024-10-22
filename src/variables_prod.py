@@ -5,8 +5,7 @@ CATEGORY_IDS = {
     "invitations": 0,
     "soirées": 0,
     "logs": 0,
-    "administration": 0,
-    "bot": 0
+    "administration": 0
 }
 
 CHANNEL_IDS = {
