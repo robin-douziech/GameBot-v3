@@ -293,9 +293,14 @@ class GameBot(commands.Bot) :
         if (event_idstr in self.vars["events"] and self.vars["events"][event_idstr]["created"]
             and not(role.id in self.vars["events"][event_idstr]["invited_roles"])) :
 
+            members_to_invite = [m for m in role.members if not(m.bot) and not(self.member_is_invited_to_event(event_idstr, m))] \
+                              + [self.get_discord_member(pseudo) for pseudo in self.config["ban_roles_backup"].keys() if role.id in self.config["ban_roles_backup"][pseudo]] \
+                              + [self.get_discord_member(pseudo) for pseudo in self.config["maintenance_roles_backup"].keys() if role.id in self.config["maintenance_roles_backup"][pseudo]] \
+                              + [self.get_discord_member(pseudo) for pseudo in self.config["rules_roles_backup"].keys() if role.id in self.config["rules_roles_backup"][pseudo]]
+
             # on ajoute les membres dans les listes de la soirée
             msg = ""
-            for member in [m for m in role.members if not(m.bot) and not(self.member_is_invited_to_event(event_idstr, m))] :
+            for member in members_to_invite :
                 self.vars["events"][event_idstr]["invited_guests"].append(f"{member.name}#{member.discriminator}")
                 msg += f"Changement d'état pour '{member.display_name}' : pas invité(e) --> invité(e)\n"
             self.vars["events"][event_idstr]["invited_roles"].append(role.id)
