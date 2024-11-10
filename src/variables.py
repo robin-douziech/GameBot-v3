@@ -69,7 +69,7 @@ EVENT_CHANNEL_PERMISSIONS = {
     "soirées": {
         "read_messages": True,
         "send_messages": True,
-        "attache_files": True,
+        "attach_files": True,
         "read_message_history": True
     },
     "logs": {
