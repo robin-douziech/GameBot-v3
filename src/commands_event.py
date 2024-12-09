@@ -74,6 +74,26 @@ async def event_gamebot(ctx: commands.Context, *args, **kwargs) :
                     else :
                         await bot.send(ctx.channel, "Tu n'as auctuellement aucune soirée de créée. Tu peux en créer une grâce à la commande \"!event create\".")
 
+            case 'update' :
+                if len(args) > 3 and f"{author.name}#{author.discriminator}:{args[1]}" in bot.vars["events"]  :
+                    event_idstr = f"{author.name}#{author.discriminator}:{args[1]}"
+                    match args[2] :
+                        case 'nb_max_guests':
+                            pattern_match = re.match(r"^(\d+)$", args[3])
+                            if pattern_match :
+                                if int(args[3]) >= len(bot.vars["events"][event_idstr]["present_guests"]) :
+                                    bot.vars["events"][event_idstr]['nb_max_guests'] = args[3]
+                                    bot.write_json("events")
+                                    await bot.update_waiting_list(event_idstr)
+                                else :
+                                    await bot.send(ctx.channel, "Tu ne peux pas réduire autant le nombre maximum d'invités à cette soirée car il y a déjà plus de membres présents que ça")
+                            else :
+                                await bot.send(ctx.channel, "Mauvaise utilisation de la commande. Utilise \"!help event update\" pour plus de détails")
+                        case _ :
+                            await bot.send(ctx.channel, "Mauvaise utilisation de la commande. Utilise \"!help event update\" pour plus de détails")
+                else :
+                    await bot.send(ctx.channel, "Mauvaise utilisation de la commande. Utilise \"!help event update\" pour plus de détails")
+            
             case 'delete' :
                 if len(args) > 1 :
                     if f"{author.name}#{author.discriminator}:{args[1]}" in bot.vars["events"] :

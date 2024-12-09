@@ -210,7 +210,7 @@ HELP_MESSAGES = {
     "birthday": """Cette commande sert à m'informer de ta date d'anniversaire afin que je puisse te le souhaiter le jour venu dans un salon dédié\
 (et par la même occasion informer les autres membres du serveur de cet événement). Elle s'utilise de la façon suivante :
 
-!birthday
+```!birthday```
 
 Quand tu utilises cette commande, je te pose une question en t'expliquant dans quel format me répondre.
 """,
@@ -219,7 +219,7 @@ Quand tu utilises cette commande, je te pose une question en t'expliquant dans q
 
     "event": """Cette commande sert à organiser des soirées, elle s'utilise de la façon suivante :
 
-!event __option__
+```!event __option__```
 
 Options :
 create - crée une soirée 
@@ -250,7 +250,7 @@ souhaites pas renseigner de nombre maximum de participants, répond à cette que
 
     "event read": """Cette commande sert à obtenir des informations sur toutes les soirées que tu as créé ou une de ces soirées en particulier. Elle s'utilise de la façon suivante :
 
-!event read [__event_id__]
+```!event read [__event_id__]```
 
 Si tu ne renseignes pas l'identifiant, je te répondrai avec une liste des soirées que tu as créé en faisant correspondre l'identifiant de la soirée avec son nom.\
 Si tu renseignes l'identifiant de la soirée, je te donnerai toutes les informations utiles sur la soirée en question.
@@ -258,9 +258,21 @@ Si tu renseignes l'identifiant de la soirée, je te donnerai toutes les informat
 
 ####################################################################################################################################################################
 
+    "event update": """Cette commande sert à modifier une soirée déjà existante
+
+```!event update __event_id__ __token__ __value__```
+
+"token" correspond à la valeur à remplacer dans la configuration de la soirée et "value" est la nouvelle valeur souhaitée pour ce token.
+Liste des tokens implémentés :
+- nb_max_guests: nombre maximal de membres présents à la soirée (si la soirée est "pleine" et que d'autres invités souhaitent s'y inscrire, je les mets dans une file d'attente). "value" doit être un entier supérieur ou égal au nombre de membres déjà présents à la soirée.
+
+""",
+
+####################################################################################################################################################################
+
     "event delete": """Cette commande sert à supprimer une soirée que tu as créée. Elle s'utilise de la façon suivante :
 
-!event delete __event_id__
+```!event delete __event_id__```
 
 Si la soirée n'est pas encore passée, je préviendrai tous les membres du serveur invités que celle-ci est annulée. \
 Tu n'as pas besoin de désinviter tous les invités d'une soirée avant de la supprimer (et il est même préférable de ne pas le \
@@ -272,7 +284,7 @@ recevront "la soirée a été supprimée").
 
     "invite": """Cette commande sert à inviter un membre ou un rôle du serveur à une soirée que tu as créée. Elle s'utilise de la façon suivante :
 
-!invite __event_id__ __guest__
+```!invite __event_id__ __guest__```
 
 avec :
 - event_id: l'identifiant de la soirée à laquelle tu souhaites inviter quelqu'un (tu peux utiliser la commande "!event read" pour connaitre les identifiants de tes soirées)
@@ -295,7 +307,7 @@ NB: si on ajoute un rôle invité à la soirée à un membre du serveur, ce memb
 
     "uninvite": """Cette commande sert à annuler l'invitation d'un membre ou un rôle à une soirée. Elle s'utilise de la façon suivante :
 
-!uninvite __event_id__ __guest__
+```!uninvite __event_id__ __guest__```
 
 avec :
 - event_id: l'identifiant de la soirée à laquelle tu souhaites désinviter quelqu'un (tu peux utiliser la commande "!event read" pour connaitre les identifiants de tes soirées)

@@ -294,11 +294,11 @@ async def on_ready():
                     await (await bot.get_all_messages_in_channel(bot.channels[f"invitations_{event_idstr}"]))[-1].remove_reaction(chr(0x1F44D), member)
                     await bot.send(member.dm_channel, f"### :information: Tu as été retiré(e) des personnes invitées à la soirée {bot.vars['events'][event_idstr]['name']}\nraison: tu ne possèdes plus aucun des rôles invités à cette soirée, soit parce que les rôles invités t'ont été retiré, soit parce que les rôles que tu possède ne sont plus invités")
                     await bot.remove_permissions_on_channel(bot.channels[f"soirées_{event_idstr}"], member)
-        
+
         if len(msg) > 0 :
-            bot.write_json("events")
-            await bot.update_waiting_list(event_idstr)
             await bot.send(bot.channels[f"logs_{event_idstr}"], msg)
+
+        await bot.update_waiting_list(event_idstr)
 
         # pour chaque rôle invité, on vérifie si tous les membres ayant ce rôle sont dans les listes
         for role_id in bot.vars["events"][event_idstr]["invited_roles"] :
@@ -317,6 +317,8 @@ async def on_ready():
                     bot.write_json("events")
                     await bot.send(bot.channels[f"logs_{event_idstr}"], f"Changement d'état pour '{member.display_name}' : pas invité(e) --> invité(e) (ajout du rôle '{role.name}')")
     
+    bot.write_json("events")
+
     # liste de toutes les dates d'anniversaire des membres du serveur (pour petite optimisation dans clock())
     for member in bot.vars["members"] :
         m = re.match(CREATION_QUESTIONS["birthday"]["date"]["valid"], bot.vars["members"][member]["birthday"])
