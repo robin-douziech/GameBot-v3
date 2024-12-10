@@ -70,6 +70,7 @@ EVENT_CHANNEL_PERMISSIONS = {
         "read_messages": True,
         "send_messages": True,
         "attach_files": True,
+        "add_reactions": True,
         "read_message_history": True
     },
     "logs": {
