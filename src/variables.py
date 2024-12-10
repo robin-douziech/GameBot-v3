@@ -220,14 +220,15 @@ Quand tu utilises cette commande, je te pose une question en t'expliquant dans q
 
     "event": """Cette commande sert à organiser des soirées, elle s'utilise de la façon suivante :
 
-```!event __option__```
+```!event <option>```
 
 Options :
-create - crée une soirée 
-read [__event_id__] - affiche des informations sur toutes les soirées que tu as créé ou une soirée en particulier
-delete __event_id__ - supprimer une soirée
+- create - crée une soirée
+- update <event_id> <token> <value> - modifie la configuration d'une soirée
+- read [<event_id>] - affiche des informations sur toutes les soirées que tu as créé ou une soirée en particulier
+- delete <event_id> - supprimer une soirée
 
-Pour plus de détails sur une option, tu peux utiliser la commande "!help event __option__"
+Pour plus de détails sur une option, tu peux utiliser la commande "!help event <option>"
 """,
 
 ####################################################################################################################################################################
@@ -251,7 +252,7 @@ souhaites pas renseigner de nombre maximum de participants, répond à cette que
 
     "event read": """Cette commande sert à obtenir des informations sur toutes les soirées que tu as créé ou une de ces soirées en particulier. Elle s'utilise de la façon suivante :
 
-```!event read [__event_id__]```
+```!event read [<event_id>]```
 
 Si tu ne renseignes pas l'identifiant, je te répondrai avec une liste des soirées que tu as créé en faisant correspondre l'identifiant de la soirée avec son nom.\
 Si tu renseignes l'identifiant de la soirée, je te donnerai toutes les informations utiles sur la soirée en question.
@@ -261,11 +262,11 @@ Si tu renseignes l'identifiant de la soirée, je te donnerai toutes les informat
 
     "event update": """Cette commande sert à modifier une soirée déjà existante
 
-```!event update __event_id__ __token__ __value__```
+```!event update <event_id> <token> <value>```
 
-"token" correspond à la valeur à remplacer dans la configuration de la soirée et "value" est la nouvelle valeur souhaitée pour ce token.
+<token> correspond à la valeur à remplacer dans la configuration de la soirée et <value> est la nouvelle valeur souhaitée pour ce token.
 Liste des tokens implémentés :
-- nb_max_guests: nombre maximal de membres présents à la soirée (si la soirée est "pleine" et que d'autres invités souhaitent s'y inscrire, je les mets dans une file d'attente). "value" doit être un entier supérieur ou égal au nombre de membres déjà présents à la soirée.
+- nb_max_guests: nombre maximal de membres présents à la soirée (si la soirée est "pleine" et que d'autres invités souhaitent s'y inscrire, je les mets dans une file d'attente). <value> doit être un entier supérieur ou égal au nombre de membres déjà présents à la soirée.
 
 """,
 
@@ -273,7 +274,7 @@ Liste des tokens implémentés :
 
     "event delete": """Cette commande sert à supprimer une soirée que tu as créée. Elle s'utilise de la façon suivante :
 
-```!event delete __event_id__```
+```!event delete <event_id>```
 
 Si la soirée n'est pas encore passée, je préviendrai tous les membres du serveur invités que celle-ci est annulée. \
 Tu n'as pas besoin de désinviter tous les invités d'une soirée avant de la supprimer (et il est même préférable de ne pas le \
@@ -285,7 +286,7 @@ recevront "la soirée a été supprimée").
 
     "invite": """Cette commande sert à inviter un membre ou un rôle du serveur à une soirée que tu as créée. Elle s'utilise de la façon suivante :
 
-```!invite __event_id__ __guest__```
+```!invite <event_id> <guest>```
 
 avec :
 - event_id: l'identifiant de la soirée à laquelle tu souhaites inviter quelqu'un (tu peux utiliser la commande "!event read" pour connaitre les identifiants de tes soirées)
@@ -308,7 +309,7 @@ NB: si on ajoute un rôle invité à la soirée à un membre du serveur, ce memb
 
     "uninvite": """Cette commande sert à annuler l'invitation d'un membre ou un rôle à une soirée. Elle s'utilise de la façon suivante :
 
-```!uninvite __event_id__ __guest__```
+```!uninvite <event_id> <guest>```
 
 avec :
 - event_id: l'identifiant de la soirée à laquelle tu souhaites désinviter quelqu'un (tu peux utiliser la commande "!event read" pour connaitre les identifiants de tes soirées)
@@ -326,7 +327,7 @@ Exemple :
 
 Tu désinvite le rôle @role1, Toto est invité à la soirée et possède le rôle role1.
 - si Toto possède un autre rôle qui est invité à la soirée, Toto est toujours invité
-- si tu as invité Toto explicitement avec la commande "!invite __event_id__ Toto", Toto est toujours invité
+- si tu as invité Toto explicitement avec la commande "!invite <event_id> Toto", Toto est toujours invité
 - si tu n'as pas invité Toto explicitement et que Toto ne possède pas d'autre rôle encore invité à la soirée, Toto n'est plus invité
 
 NB: si on supprime un rôle invité à la soirée à un membre du serveur et que ce membre était invité uniquement via ce rôle, le membre sera désinvité de la soirée
