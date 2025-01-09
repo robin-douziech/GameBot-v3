@@ -8,12 +8,20 @@ async def clock() :
     # Souhaiter les anniversaires
     if f"{day}/{month} {hours}:{minutes}" in bot.birthday_datetimes :
         for member in bot.vars["members"] :
-            discord_member = bot.get_discord_member(member)
+
             m = re.match(CREATION_QUESTIONS["birthday"]["date"]["valid"], bot.vars["members"][member]["birthday"])
-            age = f"C'est pas tous les jours qu'on a {int(f'20{year}') - int(m.group('year')[1:])} ans !!!" if m.group('year') is not None else ""
 
             if f"{day}/{month} {hours}:{minutes}" == f"{m.group('date')}{m.group('time')}" :
-                await bot.send(bot.channels["anniversaires"], MESSAGES["anniversaires"].format(member_mention=discord_member.mention, age=age))
+
+                discord_member = bot.get_discord_member(member)
+
+                msg = ""
+                if (m.group('year') is not None) :
+                    msg += f"Il y a {int(f'20{year}') - int(m.group('year')[1:])} ans, naquit :sparkles: ***{discord_member.mention}*** :sparkles:. Je lui souhaite un anniversaire très joyeux ! :birthday: :gift: :tada:"
+                else :
+                    msg += f"Il me semble que c'est l'anniversaire de :sparkles: ***{discord_member.mention}*** :sparkles: aujourd'hui. Je lui souhaite de passer une excellente journée d'anniversaire ! :birthday: :gift: :tada:"
+
+                await bot.send(bot.channels["anniversaires"], msg)
 
     if f"{hours}:{minutes}" == "00:00" :
 
