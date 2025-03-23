@@ -244,8 +244,8 @@ async def unban_gamebot(ctx: commands.Context, *args, **kwargs) :
                     return
                 
 @bot.command(name="clean")
-@bot.private_command
 @bot.admin_command
+@bot.private_command
 async def clean_gamebot(ctx: commands.Context) :
 
     if os.getenv("ENV") == "TEST" :
@@ -272,3 +272,16 @@ async def clean_gamebot(ctx: commands.Context) :
 
         for role in [r for r in bot.guild.roles if r.id != 1288223534627160220 and r != bot.guild.default_role] :
             await role.delete()
+
+@bot.command(name="json")
+@bot.admin_command
+@bot.private_command
+async def gamebot_json(ctx: commands.Context, *args, **kwargs) :
+
+    author = bot.guild.get_member(ctx.author.id)
+    
+    if len(args) > 0 and os.path.exists(f"json/{args[0]}.json") :
+        with open(f"json/{args[0]}.json") as f :
+            await bot.send(ctx.channel, f.read(), wrappers=('```json', '```'))        
+    else :
+        await bot.send(ctx.channel, "Mauvaise utilisation de la commande. Utilise \"!help json\" pour plus de détails")
