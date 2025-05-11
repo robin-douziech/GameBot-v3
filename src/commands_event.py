@@ -105,7 +105,7 @@ async def event_gamebot(ctx: commands.Context, *args, **kwargs) :
                             raise Exception(e)
                     elif author.get_role(ROLES_IDS["admin"]) and args[1] in bot.vars["events"] :
                         try :
-                            await bot.delete_event({args[1]})
+                            await bot.delete_event(args[1])
                             await bot.send(ctx.channel, "La soirée a bien été supprimée")
                         except Exception as e :
                             await bot.send(ctx.channel, "Quelque chose s'est mal passé pendant la suppression de la soirée.")
